@@ -1,21 +1,18 @@
 import bpy
-from bpy.types import Panel
+from bpy.types import Panel, Scene
+from bpy.props import BoolProperty
 from ..utils import property_utils
 
-class VIRCADIA_PT_custom_properties(Panel):
+class VIRCADIA_PT_main_panel(Panel):
     bl_label = "Vircadia"
-    bl_idname = "OBJECT_PT_vircadia_custom_properties"
+    bl_idname = "VIEW3D_PT_vircadia_main"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "Vircadia"
 
-    @classmethod
-    def poll(cls, context):
-        return True  # Always show the panel
-
     def draw(self, context):
         layout = self.layout
-        obj = context.object
+        scene = context.scene
 
         # Import/Export Section
         box = layout.box()
@@ -35,15 +32,36 @@ class VIRCADIA_PT_custom_properties(Panel):
         row.operator("export_scene.vircadia_json", text="Export JSON")
         row.operator("export_scene.vircadia_gltf", text="Export GLTF")
 
-        # Custom Properties Section
-        if obj and obj.get("name"):  # Only show custom properties if there's a selected object with a "name" property
-            self.draw_custom_properties(context, layout, obj)
+        # Visibility toggles
+        box = layout.box()
+        box.label(text="Visibility Options")
+        box.prop(scene, "vircadia_hide_collisions", text="Hide Collisions")
+        box.prop(scene, "vircadia_collisions_wireframe", text="Collisions as Wireframe")
+        box.prop(scene, "vircadia_hide_lod_levels", text="Hide LOD Levels")
+        box.prop(scene, "vircadia_hide_armatures", text="Hide Armatures")
 
-    def draw_custom_properties(self, context, layout, obj):
+class VIRCADIA_PT_custom_properties(Panel):
+    bl_label = "Vircadia Properties"
+    bl_idname = "VIEW3D_PT_vircadia_custom_properties"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "Vircadia"
+
+    @classmethod
+    def poll(cls, context):
+        return context.object is not None and context.object.get("name") is not None
+
+    def draw(self, context):
+        layout = self.layout
+        obj = context.object
+
         # Naming the main panel based on the 'name' property
         name_property = obj.get("name", "Unnamed")
         layout.label(text=f"Vircadia Object: {name_property}")
 
+        self.draw_custom_properties(context, layout, obj)
+
+    def draw_custom_properties(self, context, layout, obj):
         # Get custom properties, sort alphabetically, and filter out specific properties
         single_word_properties = {}
         grouped_properties = {}
@@ -151,8 +169,66 @@ class VIRCADIA_PT_custom_properties(Panel):
             col = row.column(align=True)
             col.prop(obj, f'["{vector_components[axis]}"]', text=axis.upper())
 
+def update_visibility(self, context):
+    for obj in bpy.data.objects:
+        update_object_visibility(obj, context.scene)
+
+def update_object_visibility(obj, scene):
+    # Check if object is a collision object
+    is_collision = any(name in obj.name.lower() for name in ["collision", "collider", "collides"]) or \
+                   (obj.parent and any(name in obj.parent.name.lower() for name in ["collision", "collider", "collides"]))
+
+    # Check if object is an LOD level (except LOD0)
+    is_lod = any(f"_LOD{i}" in obj.name for i in range(1, 100))  # Checking up to LOD99
+
+    # Update visibility based on settings
+    if is_collision:
+        obj.hide_viewport = scene.vircadia_hide_collisions
+        obj.display_type = 'WIRE' if scene.vircadia_collisions_wireframe else 'TEXTURED'
+    elif is_lod:
+        obj.hide_viewport = scene.vircadia_hide_lod_levels
+    elif obj.type == 'ARMATURE':
+        obj.hide_viewport = scene.vircadia_hide_armatures
+
+    # Apply settings to children recursively
+    for child in obj.children:
+        update_object_visibility(child, scene)
+
 def register():
+    bpy.types.Scene.vircadia_hide_collisions = BoolProperty(
+        name="Hide Collisions",
+        description="Hide collision objects",
+        default=True,
+        update=update_visibility
+    )
+    bpy.types.Scene.vircadia_collisions_wireframe = BoolProperty(
+        name="Collisions as Wireframe",
+        description="Display collision objects as wireframe",
+        default=False,
+        update=update_visibility
+    )
+    bpy.types.Scene.vircadia_hide_lod_levels = BoolProperty(
+        name="Hide LOD Levels",
+        description="Hide LOD levels except LOD0",
+        default=True,
+        update=update_visibility
+    )
+    bpy.types.Scene.vircadia_hide_armatures = BoolProperty(
+        name="Hide Armatures",
+        description="Hide armatures",
+        default=True,
+        update=update_visibility
+    )
+    bpy.utils.register_class(VIRCADIA_PT_main_panel)
     bpy.utils.register_class(VIRCADIA_PT_custom_properties)
 
 def unregister():
     bpy.utils.unregister_class(VIRCADIA_PT_custom_properties)
+    bpy.utils.unregister_class(VIRCADIA_PT_main_panel)
+    del bpy.types.Scene.vircadia_hide_collisions
+    del bpy.types.Scene.vircadia_collisions_wireframe
+    del bpy.types.Scene.vircadia_hide_lod_levels
+    del bpy.types.Scene.vircadia_hide_armatures
+
+if __name__ == "__main__":
+    register()

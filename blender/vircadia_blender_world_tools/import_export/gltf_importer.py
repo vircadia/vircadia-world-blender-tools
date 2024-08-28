@@ -1,6 +1,6 @@
 import bpy
 import os
-from mathutils import Vector
+from mathutils import Matrix
 
 def find_matching_object(filename):
     for obj in bpy.data.objects:
@@ -28,9 +28,16 @@ def import_gltf(context, filepaths):
         # Store the current selection before importing
         pre_import_selection = context.selected_objects.copy()
 
-        # Import the GLTF/GLB file using built-in importer with default settings
+        # Import the GLTF/GLB file
         try:
-            bpy.ops.import_scene.gltf(filepath=filepath)
+            bpy.ops.import_scene.gltf(
+                filepath=filepath,
+                import_pack_images=True,
+                merge_vertices=False,
+                import_shading='NORMALS',
+                bone_heuristic='BLENDER',
+                guess_original_bind_pose=True
+            )
             print(f"Successfully imported GLTF from {filepath}")
         except Exception as e:
             print(f"Error importing GLTF: {str(e)}")
@@ -41,18 +48,42 @@ def import_gltf(context, filepaths):
 
         if matching_obj:
             # Calculate the offset
-            offset = matching_obj.location
+            offset = matching_obj.matrix_world.to_translation()
 
             # Parent all imported objects to the matching object and adjust their positions
             for obj in new_objects:
-                original_location = obj.location.copy()
+                # Store the original world matrix
+                original_matrix = obj.matrix_world.copy()
+                
+                # Set the parent
                 obj.parent = matching_obj
-                # Set the object's location relative to the parent
-                obj.location = original_location
+                
+                # Reset the parent inverse to identity
+                obj.matrix_parent_inverse = matching_obj.matrix_world.inverted()
+                
+                # Set the object's matrix_world to its original value
+                obj.matrix_world = original_matrix
+                
+                # Apply only the position offset
+                obj.location += offset
+
+                # Remove the object from all collections except the parent's collection
+                for coll in obj.users_collection:
+                    coll.objects.unlink(obj)
+                
+                # Ensure the object is in the parent's collection
+                parent_collections = matching_obj.users_collection
+                if parent_collections:
+                    parent_collections[0].objects.link(obj)
+
+                # Apply visibility settings
+                update_object_visibility(obj, context.scene)
 
             print(f"Parented {len(new_objects)} objects to {matching_obj.name}")
         else:
             print(f"No matching object found for {filename}. Importing at scene origin.")
+            for obj in new_objects:
+                update_object_visibility(obj, context.scene)
 
         # Update the original_selection to include the new objects
         original_selection.extend(new_objects)
@@ -69,6 +100,27 @@ def import_gltf(context, filepaths):
             area.tag_redraw()
 
     print("GLTF import completed.")
+
+def update_object_visibility(obj, scene):
+    # Check if object is a collision object
+    is_collision = any(name in obj.name.lower() for name in ["collision", "collider", "collides"]) or \
+                   (obj.parent and any(name in obj.parent.name.lower() for name in ["collision", "collider", "collides"]))
+
+    # Check if object is an LOD level (except LOD0)
+    is_lod = any(f"_LOD{i}" in obj.name for i in range(1, 100))  # Checking up to LOD99
+
+    # Update visibility based on settings
+    if is_collision:
+        obj.hide_viewport = scene.vircadia_hide_collisions
+        obj.display_type = 'WIRE' if scene.vircadia_collisions_wireframe else 'TEXTURED'
+    elif is_lod:
+        obj.hide_viewport = scene.vircadia_hide_lod_levels
+    elif obj.type == 'ARMATURE':
+        obj.hide_viewport = scene.vircadia_hide_armatures
+
+    # Apply settings to children recursively
+    for child in obj.children:
+        update_object_visibility(child, scene)
 
 def register():
     pass
