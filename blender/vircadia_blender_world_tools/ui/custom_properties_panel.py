@@ -49,15 +49,19 @@ class VIRCADIA_PT_custom_properties(Panel):
 
     @classmethod
     def poll(cls, context):
-        return context.object is not None and context.object.get("name") is not None
+        return context.object is not None and (context.object.get("name") is not None or context.object.get("type") == "Zone")
 
     def draw(self, context):
         layout = self.layout
         obj = context.object
 
-        # Naming the main panel based on the 'name' property
-        name_property = obj.get("name", "Unnamed")
-        layout.label(text=f"Vircadia Object: {name_property}")
+        # Get the custom property "name" for the panel title
+        if obj.get("type") == "Zone":
+            custom_name = obj.name
+        else:
+            custom_name = obj.get("name", "Unnamed")
+        
+        layout.label(text=f"{custom_name}")
 
         self.draw_custom_properties(context, layout, obj)
 
