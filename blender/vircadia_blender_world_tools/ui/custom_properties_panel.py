@@ -60,7 +60,7 @@ class VIRCADIA_PT_custom_properties(Panel):
             custom_name = obj.name
         else:
             custom_name = obj.get("name", "Unnamed")
-        
+
         layout.label(text=f"{custom_name}")
 
         self.draw_custom_properties(context, layout, obj)
@@ -132,14 +132,38 @@ class VIRCADIA_PT_custom_properties(Panel):
             box = layout.box()
             box.label(text=group_name.capitalize())
 
-            for key, value in group_props.items():
-                if isinstance(value, dict):
-                    if self.is_color_property(value):
-                        self.draw_color_property(box, obj, key, value)
-                    elif self.is_vector_property(value):
-                        self.draw_vector_property(box, obj, key, value)
-                else:
-                    self.draw_property(box, obj, key, value)
+            if group_name == "keyLight":
+                self.draw_keylight_properties(box, obj, group_props)
+            else:
+                for key, value in group_props.items():
+                    if isinstance(value, dict):
+                        if self.is_color_property(value):
+                            self.draw_color_property(box, obj, key, value)
+                        elif self.is_vector_property(value):
+                            self.draw_vector_property(box, obj, key, value)
+                    else:
+                        self.draw_property(box, obj, key, value)
+
+    def draw_keylight_properties(self, layout, obj, properties):
+        # Draw keyLight color
+        color_props = {
+            "red": properties.get("color", {}).get("red", "keyLight_color_red"),
+            "green": properties.get("color", {}).get("green", "keyLight_color_green"),
+            "blue": properties.get("color", {}).get("blue", "keyLight_color_blue")
+        }
+        self.draw_color_property(layout, obj, "Color", color_props)
+
+        # Draw keyLight direction
+        direction_props = {
+            "x": properties.get("direction", {}).get("x", "keyLight_direction_x"),
+            "y": properties.get("direction", {}).get("y", "keyLight_direction_y"),
+            "z": properties.get("direction", {}).get("z", "keyLight_direction_z")
+        }
+        self.draw_vector_property(layout, obj, "Direction", direction_props)
+
+        # Draw keyLight intensity
+        intensity_prop = properties.get("intensity", "keyLight_intensity")
+        self.draw_property(layout, obj, "Intensity", intensity_prop)
 
     def is_color_component(self, key):
         return key.endswith(("red", "green", "blue"))
