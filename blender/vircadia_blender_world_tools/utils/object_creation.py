@@ -7,25 +7,30 @@ def extract_filename_from_url(url):
 
 def get_blender_object_type(vircadia_type):
     type_mapping = {
-        "box": "MESH",
-        "sphere": "MESH",
+        "model": "EMPTY",
         "shape": "MESH",
+        "light": "LIGHT",
+        "text": "FONT",
+        "image": "EMPTY",
+        "web": "EMPTY",
+        "zone": "EMPTY",
+        "particle": "EMPTY",
     }
     return type_mapping.get(vircadia_type.lower(), "EMPTY")
 
 def create_blender_object(entity):
     vircadia_type = entity.get("type", "").lower()
-    shape_type = entity.get("shapeType", "").lower()
+    shape_type = entity.get("shape", "").lower()
 
     print(f"Creating object of type: {vircadia_type}")
 
-    blender_type = get_blender_object_type(shape_type or vircadia_type)
+    blender_type = get_blender_object_type(vircadia_type)
 
     # Determine the name for both the Blender object and the custom property
     if vircadia_type == "zone":
         custom_name = "zone"
         blender_name = "zone"
-    elif "modelURL" in entity:
+    elif vircadia_type == "model" and "modelURL" in entity:
         custom_name = extract_filename_from_url(entity["modelURL"])
         blender_name = entity.get("name", custom_name)
     else:
@@ -37,6 +42,10 @@ def create_blender_object(entity):
 
     if blender_type == "MESH":
         bpy.ops.mesh.primitive_cube_add(size=1, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
+    elif blender_type == "LIGHT":
+        bpy.ops.object.light_add(type='POINT', location=(0, 0, 0))
+    elif blender_type == "FONT":
+        bpy.ops.object.text_add(location=(0, 0, 0))
     else:
         bpy.ops.object.empty_add(type='PLAIN_AXES')
 
