@@ -79,7 +79,8 @@ class VIRCADIA_OT_create_entity(Operator):
             bpy.ops.mesh.primitive_plane_add()
 
         obj = bpy.context.active_object
-        obj.name = entity.get("name", "Vircadia_Shape")
+        obj.name = f"Vircadia_{shape_type.capitalize()}"
+        entity["name"] = shape_type.capitalize()  # Set the name in the entity dictionary
 
         self.set_object_properties(obj, entity)
         return obj
@@ -107,7 +108,8 @@ class VIRCADIA_OT_create_entity(Operator):
             bpy.ops.mesh.primitive_monkey_add()
 
         obj = bpy.context.active_object
-        obj.name = entity.get("name", "Vircadia_Model")
+        obj.name = f"Vircadia_{primitive_type.capitalize()}"
+        entity["name"] = primitive_type.capitalize()  # Set the name in the entity dictionary
 
         self.set_object_properties(obj, entity)
         return obj
@@ -117,7 +119,8 @@ class VIRCADIA_OT_create_entity(Operator):
         bpy.ops.mesh.primitive_plane_add()
 
         obj = bpy.context.active_object
-        obj.name = entity.get("name", "Vircadia_Image")
+        obj.name = "Vircadia_Image"
+        entity["name"] = "Image"  # Set the name in the entity dictionary
 
         self.set_object_properties(obj, entity)
         return obj

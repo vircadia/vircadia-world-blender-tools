@@ -97,9 +97,6 @@ def setup_sun_light(zone_obj):
 
     print(f"Sun light setup complete for {zone_obj.name}")
 
-    # Set up custom property update handlers
-    bpy.app.handlers.depsgraph_update_post.append(keylight_update_handler)
-
 def update_sun_color(zone_obj, sun_light):
     red = zone_obj.get("keyLight_color_red", 255) / 255
     green = zone_obj.get("keyLight_color_green", 255) / 255
@@ -153,14 +150,6 @@ def keylight_update_handler(scene):
         if obj.get("type") == "Zone":
             update_keylight(obj)
 
-def register():
-    bpy.app.handlers.depsgraph_update_post.append(handle_sun_updates)
-    bpy.app.handlers.depsgraph_update_post.append(keylight_update_handler)
-
-def unregister():
-    bpy.app.handlers.depsgraph_update_post.remove(handle_sun_updates)
-    bpy.app.handlers.depsgraph_update_post.remove(keylight_update_handler)
-
 def handle_sun_updates(scene):
     for obj in scene.objects:
         if obj.type == 'LIGHT' and obj.data.type == 'SUN' and obj.parent and obj.parent.get("type") == "Zone":
@@ -183,5 +172,13 @@ def set_viewport_shading():
 def configure_world_and_viewport():
     set_viewport_shading()
     # Additional world setup can be added here if needed
+
+def register():
+    bpy.app.handlers.depsgraph_update_post.append(handle_sun_updates)
+    bpy.app.handlers.depsgraph_update_post.append(keylight_update_handler)
+
+def unregister():
+    bpy.app.handlers.depsgraph_update_post.remove(handle_sun_updates)
+    bpy.app.handlers.depsgraph_update_post.remove(keylight_update_handler)
 
 print("world_setup.py loaded")

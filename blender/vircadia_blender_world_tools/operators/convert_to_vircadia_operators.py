@@ -25,6 +25,9 @@ class VIRCADIA_OT_convert_to_vircadia(Operator):
             # Set custom properties
             property_utils.set_custom_properties(obj, entity)
             
+            # Set the "name" custom property to the Blender object's name
+            obj["name"] = obj.name
+            
             self.report({'INFO'}, f"Converted {obj.name} to Vircadia entity")
             return {'FINISHED'}
         else:

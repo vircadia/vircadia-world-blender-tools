@@ -1,4 +1,6 @@
 import json
+import bpy
+from . import coordinate_utils
 
 # List of properties to skip
 skip_properties = {
@@ -87,3 +89,58 @@ def get_custom_properties(obj):
         if not should_filter_property(key):
             properties[key] = obj[key]
     return properties
+
+def update_transform_from_properties(obj):
+    # Update position
+    if all(f"position_{axis}" in obj for axis in ['x', 'y', 'z']):
+        vircadia_pos = (obj["position_x"], obj["position_y"], obj["position_z"])
+        obj.location = coordinate_utils.vircadia_to_blender_coordinates(*vircadia_pos)
+
+    # Update dimensions (scale)
+    if all(f"dimensions_{axis}" in obj for axis in ['x', 'y', 'z']):
+        vircadia_scale = (obj["dimensions_x"], obj["dimensions_y"], obj["dimensions_z"])
+        obj.scale = coordinate_utils.vircadia_to_blender_coordinates(*vircadia_scale)
+
+    # Update rotation
+    if all(f"rotation_{axis}" in obj for axis in ['x', 'y', 'z', 'w']):
+        vircadia_rot = (obj["rotation_x"], obj["rotation_y"], obj["rotation_z"], obj["rotation_w"])
+        obj.rotation_mode = 'QUATERNION'
+        obj.rotation_quaternion = coordinate_utils.vircadia_to_blender_rotation(*vircadia_rot)
+
+def create_property_update_handler(obj, prop_name):
+    def property_update_handler(self, context):
+        update_transform_from_properties(obj)
+
+    return property_update_handler
+
+def register_property_update_handlers(obj):
+    for prop_name in ['position_x', 'position_y', 'position_z',
+                      'dimensions_x', 'dimensions_y', 'dimensions_z',
+                      'rotation_x', 'rotation_y', 'rotation_z', 'rotation_w']:
+        if prop_name in obj:
+            obj.property_unregister(prop_name)
+            obj.property_overridable_library_set(prop_name, True)
+            obj.property_overridable_library_set(prop_name, True)
+            obj[f"{prop_name}_update"] = create_property_update_handler(obj, prop_name)
+            obj.driver_add(f'["{prop_name}"]').driver.expression = f"{prop_name}_update"
+
+@bpy.app.handlers.persistent
+def load_handler(dummy):
+    for obj in bpy.data.objects:
+        if "name" in obj:
+            register_property_update_handlers(obj)
+
+def register():
+    bpy.app.handlers.load_post.append(load_handler)
+
+def unregister():
+    bpy.app.handlers.load_post.remove(load_handler)
+    for obj in bpy.data.objects:
+        if "name" in obj:
+            for prop_name in ['position_x', 'position_y', 'position_z',
+                              'dimensions_x', 'dimensions_y', 'dimensions_z',
+                              'rotation_x', 'rotation_y', 'rotation_z', 'rotation_w']:
+                if prop_name in obj:
+                    obj.property_unregister(prop_name)
+                    if f"{prop_name}_update" in obj:
+                        del obj[f"{prop_name}_update"]

@@ -1,4 +1,5 @@
 from ..utils import property_utils
+import bpy
 
 def draw_custom_properties(context, layout, obj):
     # Get custom properties, sort alphabetically, and filter out specific properties
@@ -52,7 +53,10 @@ def draw_custom_properties(context, layout, obj):
                     grouped_properties[group_name] = {}
                 grouped_properties[group_name][sub_name] = key
 
-    # Draw single-word properties at the top
+    # Draw transform properties at the top
+    draw_transform_properties(layout, obj)
+
+    # Draw single-word properties
     for key, value in single_word_properties.items():
         if isinstance(value, dict):
             if is_color_property(value):
@@ -78,6 +82,28 @@ def draw_custom_properties(context, layout, obj):
                         draw_vector_property(box, obj, key, value)
                 else:
                     draw_property(box, obj, key, value)
+
+def draw_transform_properties(layout, obj):
+    box = layout.box()
+    box.label(text="Transform")
+
+    # Position
+    row = box.row(align=True)
+    row.label(text="Position")
+    for axis in ['x', 'y', 'z']:
+        row.prop(obj, f'["{axis}"]', text=axis.upper())
+
+    # Rotation
+    row = box.row(align=True)
+    row.label(text="Rotation")
+    for axis in ['x', 'y', 'z', 'w']:
+        row.prop(obj, f'["rotation_{axis}"]', text=axis.upper())
+
+    # Dimensions
+    row = box.row(align=True)
+    row.label(text="Dimensions")
+    for axis in ['x', 'y', 'z']:
+        row.prop(obj, f'["dimensions_{axis}"]', text=axis.upper())
 
 def draw_keylight_properties(layout, obj, properties):
     # Draw keyLight color

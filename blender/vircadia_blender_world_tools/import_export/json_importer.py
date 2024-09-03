@@ -31,6 +31,9 @@ def import_entities(data, json_directory):
             # Additional check to ensure zone objects always have "zone" as their name custom property
             if obj.get("type") == "Zone":
                 obj["name"] = "zone"
+
+            # Add transform update handler
+            bpy.app.handlers.depsgraph_update_post.append(object_creation.create_transform_update_handler(obj))
         else:
             error_handling.log_import_error(entity)
     return zone_obj

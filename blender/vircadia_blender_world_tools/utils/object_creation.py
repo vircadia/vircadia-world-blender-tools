@@ -76,5 +76,49 @@ def create_blender_object(entity):
     if vircadia_type == "model":
         obj.scale = (1, 1, 1)
 
+    # Add update handler for transform synchronization
+    bpy.app.handlers.depsgraph_update_post.append(create_transform_update_handler(obj))
+
     print(f"Created object: {obj.name} with custom name: {obj['name']}")
     return obj
+
+def create_transform_update_handler(obj):
+    def transform_update_handler(scene):
+        if obj is None or obj.name not in bpy.data.objects:
+            return
+
+        # Update position
+        vircadia_pos = coordinate_utils.blender_to_vircadia_coordinates(*obj.location)
+        obj["position_x"] = vircadia_pos[0]
+        obj["position_y"] = vircadia_pos[1]
+        obj["position_z"] = vircadia_pos[2]
+
+        # Update dimensions (scale)
+        vircadia_scale = coordinate_utils.blender_to_vircadia_coordinates(*obj.scale)
+        obj["dimensions_x"] = vircadia_scale[0]
+        obj["dimensions_y"] = vircadia_scale[1]
+        obj["dimensions_z"] = vircadia_scale[2]
+
+        # Update rotation
+        if obj.rotation_mode == 'QUATERNION':
+            vircadia_rot = coordinate_utils.blender_to_vircadia_rotation(*obj.rotation_quaternion)
+        else:
+            vircadia_rot = coordinate_utils.blender_to_vircadia_rotation(*obj.rotation_euler.to_quaternion())
+        
+        obj["rotation_x"] = vircadia_rot[0]
+        obj["rotation_y"] = vircadia_rot[1]
+        obj["rotation_z"] = vircadia_rot[2]
+        obj["rotation_w"] = vircadia_rot[3]
+
+    return transform_update_handler
+
+def register():
+    bpy.app.handlers.depsgraph_update_post.append(transform_update_handler)
+
+def unregister():
+    bpy.app.handlers.depsgraph_update_post.remove(transform_update_handler)
+
+def transform_update_handler(scene):
+    for obj in bpy.data.objects:
+        if "name" in obj:
+            create_transform_update_handler(obj)(scene)
