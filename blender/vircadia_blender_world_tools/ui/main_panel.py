@@ -1,6 +1,6 @@
 import bpy
-from bpy.types import Panel
-from bpy.props import BoolProperty
+from bpy.types import Panel, Operator
+from bpy.props import BoolProperty, StringProperty
 
 def update_visibility(self, context):
     for obj in bpy.data.objects:
@@ -27,6 +27,15 @@ def update_object_visibility(obj, scene):
     for child in obj.children:
         update_object_visibility(child, scene)
 
+class VIRCADIA_OT_paste_content_path(Operator):
+    bl_idname = "vircadia.paste_content_path"
+    bl_label = "Paste"
+    bl_description = "Paste content path from clipboard"
+
+    def execute(self, context):
+        context.scene.vircadia_content_path = bpy.context.window_manager.clipboard
+        return {'FINISHED'}
+
 class VIRCADIA_PT_main_panel(Panel):
     bl_label = "Vircadia"
     bl_idname = "VIEW3D_PT_vircadia_main"
@@ -52,6 +61,12 @@ class VIRCADIA_PT_main_panel(Panel):
         # Export Sub-Section
         export_box = box.box()
         export_box.label(text="Export")
+
+        # Content Path
+        row = export_box.row(align=True)
+        row.prop(scene, "vircadia_content_path", text="Content Path")
+        row.operator("vircadia.paste_content_path", text="", icon='PASTEDOWN')
+
         row = export_box.row()
         row.operator("export_scene.vircadia_json", text="Export JSON")
         row.operator("export_scene.vircadia_gltf", text="Export GLTF")
@@ -65,6 +80,12 @@ class VIRCADIA_PT_main_panel(Panel):
         box.prop(scene, "vircadia_hide_armatures", text="Hide Armatures")
 
 def register():
+    bpy.utils.register_class(VIRCADIA_OT_paste_content_path)
+    bpy.types.Scene.vircadia_content_path = StringProperty(
+        name="Content Path",
+        description="Path to the content directory for Vircadia assets",
+        default="",
+    )
     bpy.types.Scene.vircadia_hide_collisions = BoolProperty(
         name="Hide Collisions",
         description="Hide collision objects",
@@ -93,10 +114,12 @@ def register():
 
 def unregister():
     bpy.utils.unregister_class(VIRCADIA_PT_main_panel)
+    bpy.utils.unregister_class(VIRCADIA_OT_paste_content_path)
     del bpy.types.Scene.vircadia_hide_collisions
     del bpy.types.Scene.vircadia_collisions_wireframe
     del bpy.types.Scene.vircadia_hide_lod_levels
     del bpy.types.Scene.vircadia_hide_armatures
+    del bpy.types.Scene.vircadia_content_path
 
 if __name__ == "__main__":
     register()

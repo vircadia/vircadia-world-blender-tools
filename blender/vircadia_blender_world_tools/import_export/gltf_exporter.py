@@ -2,12 +2,13 @@ import bpy
 import os
 
 def export_gltf(context, filepath):
-    file_ext = os.path.splitext(filepath)[1].lower()
-    if file_ext not in ['.gltf', '.glb']:
-        filepath = filepath + '.glb'
+    # Ensure the filename is 'environment.gltf' or 'environment.glb'
+    directory = os.path.dirname(filepath)
+    filename = 'environment.glb' if filepath.lower().endswith('.glb') else 'environment.gltf'
+    filepath = os.path.join(directory, filename)
 
     export_settings = {
-        'export_format': 'GLB' if filepath.lower().endswith('.glb') else 'GLTF_SEPARATE',
+        'export_format': 'GLB' if filename.lower().endswith('.glb') else 'GLTF_SEPARATE',
         'use_selection': False,
         'export_apply': True,
         'export_animations': True,
@@ -21,7 +22,7 @@ def export_gltf(context, filepath):
         'export_texcoords': True,
         'export_nla_strips': True,
         'export_force_sampling': True,
-        'export_texture_dir': os.path.dirname(filepath),
+        'export_texture_dir': directory,
         'export_keep_originals': False,
         'export_tangents': False,
         'export_skins': True,
