@@ -3,7 +3,7 @@ import os
 from bpy_extras.io_utils import ImportHelper
 from bpy.props import CollectionProperty, StringProperty
 from bpy.types import Operator
-from ..import_export import json_importer, gltf_importer
+from ..import_export import old_json_importer, gltf_importer
 
 class IMPORT_OT_vircadia_json(bpy.types.Operator):
     bl_idname = "import_scene.vircadia_json"
@@ -12,7 +12,7 @@ class IMPORT_OT_vircadia_json(bpy.types.Operator):
 
     def execute(self, context):
         try:
-            json_importer.process_vircadia_json(self.filepath)
+            old_json_importer.process_vircadia_json(self.filepath)
             return {'FINISHED'}
         except Exception as e:
             self.report({'ERROR'}, f"Error importing JSON: {str(e)}")

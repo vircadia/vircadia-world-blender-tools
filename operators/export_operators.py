@@ -1,5 +1,5 @@
 import bpy
-from ..import_export import json_exporter, gltf_exporter
+from ..import_export import old_json_exporter, gltf_exporter
 
 class EXPORT_OT_vircadia_json(bpy.types.Operator):
     bl_idname = "export_scene.vircadia_json"
@@ -7,7 +7,7 @@ class EXPORT_OT_vircadia_json(bpy.types.Operator):
     filepath: bpy.props.StringProperty(subtype="FILE_PATH")
 
     def execute(self, context):
-        json_exporter.export_vircadia_json(context, self.filepath)
+        old_json_exporter.export_vircadia_json(context, self.filepath)
         return {'FINISHED'}
 
     def invoke(self, context, event):
