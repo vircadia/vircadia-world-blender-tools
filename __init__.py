@@ -1,15 +1,3 @@
-# Add this at the beginning of your file
-if "bpy" in locals():
-    import importlib
-    if "import_export" in locals():
-        importlib.reload(import_export)
-    if "ui" in locals():
-        importlib.reload(ui)
-    if "utils" in locals():
-        importlib.reload(utils)
-    if "operators" in locals():
-        importlib.reload(operators)
-
 import bpy
 from . import import_export
 from . import ui
@@ -56,8 +44,7 @@ def register():
     operators.register()
 
     # Register the transform update handler
-    if utils.object_creation.global_transform_update_handler not in bpy.app.handlers.depsgraph_update_post:
-        bpy.app.handlers.depsgraph_update_post.append(utils.object_creation.global_transform_update_handler)
+    bpy.app.handlers.depsgraph_update_post.append(utils.object_creation.global_transform_update_handler)
 
 def unregister():
     # Unregister the transform update handler

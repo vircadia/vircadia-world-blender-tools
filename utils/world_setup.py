@@ -6,15 +6,9 @@ from ..utils import coordinate_utils
 def setup_hdri_and_skybox(zone_obj, json_directory):
     # Set up the World shader nodes
     world = bpy.context.scene.world
-    if world is not None:
-        world.use_nodes = True
-        if world.node_tree is not None:
-            nodes = world.node_tree.nodes
-            links = world.node_tree.links
-        else:
-            print("Warning: World node tree not found")
-    else:
-        print("Warning: World not found")
+    world.use_nodes = True
+    nodes = world.node_tree.nodes
+    links = world.node_tree.links
 
     # Clear existing nodes
     nodes.clear()

@@ -3,7 +3,7 @@ import json
 import os
 from urllib.parse import urljoin
 from .. import config
-from ..utils import coordinate_utils, property_utils
+from ..utils import coordinate_utils, property_utils, visibility_utils
 
 def get_vircadia_entity_data(obj, content_path):
     entity_data = {}
@@ -127,25 +127,30 @@ def export_vircadia_json(context, filepath):
     model_entity["modelURL"] = urljoin(content_path, config.DEFAULT_GLB_EXPORT_FILENAME)
     scene_data["Entities"].append(model_entity)
 
-    for obj in bpy.data.objects:
-        if "type" in obj:
-            entity_type = obj["type"].lower()
-            if entity_type not in ["light", "model"]:
-                entity_data = get_vircadia_entity_data(obj, content_path)
-                
-                # Merge with template
-                template = load_entity_template(entity_type)
-                template_entity = template["Entities"][0]
-                merged_entity = {**template_entity, **entity_data}
-                
-                scene_data["Entities"].append(merged_entity)
+    hidden_objects = visibility_utils.temporarily_unhide_objects(context)
 
-    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    try:
+        for obj in bpy.data.objects:
+            if "type" in obj:
+                entity_type = obj["type"].lower()
+                if entity_type not in ["light", "model"]:
+                    entity_data = get_vircadia_entity_data(obj, content_path)
+                    
+                    # Merge with template
+                    template = load_entity_template(entity_type)
+                    template_entity = template["Entities"][0]
+                    merged_entity = {**template_entity, **entity_data}
+                    
+                    scene_data["Entities"].append(merged_entity)
 
-    with open(filepath, 'w') as f:
-        json.dump(scene_data, f, indent=2)
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
 
-    print(f"Vircadia JSON exported successfully to {filepath}")
+        with open(filepath, 'w') as f:
+            json.dump(scene_data, f, indent=2)
+
+        print(f"Vircadia JSON exported successfully to {filepath}")
+    finally:
+        visibility_utils.restore_hidden_objects(hidden_objects)
 
 class EXPORT_OT_vircadia_json(bpy.types.Operator):
     bl_idname = "export_scene.vircadia_json"

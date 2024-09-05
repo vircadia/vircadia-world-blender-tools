@@ -1,6 +1,7 @@
 import bpy
 import os
 from .. import config
+from ..utils import visibility_utils
 
 def export_glb(context, filepath):
     directory = os.path.dirname(filepath)
@@ -32,12 +33,15 @@ def export_glb(context, filepath):
         'export_image_format': 'AUTO',
     }
 
+    hidden_objects = visibility_utils.temporarily_unhide_objects(context)
+
     try:
         bpy.ops.export_scene.gltf(filepath=filepath, **export_settings)
         print(f"Successfully exported GLB to {filepath}")
     except Exception as e:
         print(f"Error exporting GLB: {str(e)}")
-        return
+    finally:
+        visibility_utils.restore_hidden_objects(hidden_objects)
 
     print("GLB export completed.")
 
