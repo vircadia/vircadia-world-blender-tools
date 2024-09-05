@@ -1,6 +1,6 @@
 import bpy
 from bpy.types import Panel
-from bpy.props import EnumProperty
+from bpy.props import EnumProperty, StringProperty
 
 # Define allowed types
 ALLOWED_ENTITY_TYPES = [
@@ -54,6 +54,17 @@ class VIRCADIA_PT_entity_creation(Panel):
             layout.prop(scene, "vircadia_shape_type")
         elif scene.vircadia_entity_type == 'model':
             layout.prop(scene, "vircadia_primitive_type")
+        elif scene.vircadia_entity_type == 'zone':
+            box = layout.box()
+            box.label(text="Skybox Texture:")
+            row = box.row(align=True)
+            row.prop(scene, "vircadia_skybox_texture", text="")
+            row.operator("vircadia.select_skybox_texture", text="", icon='FILE_FOLDER')
+            
+            box.label(text="Environment Texture:")
+            row = box.row(align=True)
+            row.prop(scene, "vircadia_environment_texture", text="")
+            row.operator("vircadia.select_environment_texture", text="", icon='FILE_FOLDER')
 
         layout.operator("vircadia.create_entity")
 
@@ -62,6 +73,34 @@ def get_entity_types(self, context):
 
 def get_shape_types(self, context):
     return [(t, t.capitalize(), "", i) for i, t in enumerate(ALLOWED_SHAPE_TYPES)]
+
+class VIRCADIA_OT_select_skybox_texture(bpy.types.Operator):
+    bl_idname = "vircadia.select_skybox_texture"
+    bl_label = "Select Skybox Texture"
+    
+    filepath: bpy.props.StringProperty(subtype="FILE_PATH")
+    
+    def execute(self, context):
+        context.scene.vircadia_skybox_texture = self.filepath
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
+class VIRCADIA_OT_select_environment_texture(bpy.types.Operator):
+    bl_idname = "vircadia.select_environment_texture"
+    bl_label = "Select Environment Texture"
+    
+    filepath: bpy.props.StringProperty(subtype="FILE_PATH")
+    
+    def execute(self, context):
+        context.scene.vircadia_environment_texture = self.filepath
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
 
 def register():
     bpy.types.Scene.vircadia_entity_type = EnumProperty(
@@ -82,14 +121,32 @@ def register():
         default='CUBE'
     )
 
+    bpy.types.Scene.vircadia_skybox_texture = StringProperty(
+        name="Skybox Texture",
+        default="",
+        subtype='FILE_PATH'
+    )
+
+    bpy.types.Scene.vircadia_environment_texture = StringProperty(
+        name="Environment Texture",
+        default="",
+        subtype='FILE_PATH'
+    )
+
     bpy.utils.register_class(VIRCADIA_PT_entity_creation)
+    bpy.utils.register_class(VIRCADIA_OT_select_skybox_texture)
+    bpy.utils.register_class(VIRCADIA_OT_select_environment_texture)
 
 def unregister():
     bpy.utils.unregister_class(VIRCADIA_PT_entity_creation)
+    bpy.utils.unregister_class(VIRCADIA_OT_select_skybox_texture)
+    bpy.utils.unregister_class(VIRCADIA_OT_select_environment_texture)
 
     del bpy.types.Scene.vircadia_primitive_type
     del bpy.types.Scene.vircadia_shape_type
     del bpy.types.Scene.vircadia_entity_type
+    del bpy.types.Scene.vircadia_skybox_texture
+    del bpy.types.Scene.vircadia_environment_texture
 
 if __name__ == "__main__":
     register()

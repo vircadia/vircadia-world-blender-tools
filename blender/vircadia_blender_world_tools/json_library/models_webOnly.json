@@ -3,22 +3,16 @@
   "Entities": [
     {
     "id": "{10000000-0000-0000-0000-000000000000}",
-    "type": "Image",
+    "type": "Web",
     "lastEdited": 1000000000000000,
-	"parentID": "{00000000-0000-0000-0000-000000000000}",
-    "name": "Name_Here",
-    "userData": "UserData_here",
+    "name": "Name_here",
+    "userData": "userData_here",
     "href": "URL_here",
-    "description": "Description_here",
-    "position": {
-        "x": 0.0000000000000000,
-        "y": 0.0000000000000000,
-        "z": 0.0000000000000000
-    },
+    "description": "URL_here",
     "dimensions": {
-        "x": 1.600000000000000,
-        "y": 0.9000000000000000,
-        "z": 0.010000000000000000
+        "x": 1,
+        "y": 1,
+        "z": 1
     },
     "rotation": {
         "x": -0.0000000000000000,
@@ -27,7 +21,7 @@
         "w": 1
     },
     "created": 1000000000000000,
-    "lastEditedBy": "{00000000-0000-0000-0000-000000000000}",
+    "lastEditedBy": "{10000000-0000-0000-0000-000000000000}",
     "queryAACube": {
         "x": 1.000000000000000,
         "y": 1.000000000000000,
@@ -46,13 +40,15 @@
     "cloneable": false,
     "cloneDynamic": false,
     "cloneAvatarEntity": false,
-    "script": "Script_URL",
-    "serverScripts": "Script_URL",
-    "imageURL": "Image_URL",
-    "emissive": false,
-    "textures": {
-        "tex.picture": "URL_here"
+    "script": "URL_here",
+    "serverScripts": "URL_here",
+    "color": {
+        "red": 255,
+        "green": 255,
+        "blue": 255
     },
+    "sourceUrl": "URL_here",
+    "scriptURL": "URL_here",
     "clientOnly": false,
     "avatarEntity": false,
     "localEntity": false,

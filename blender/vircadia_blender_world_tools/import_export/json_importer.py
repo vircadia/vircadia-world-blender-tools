@@ -18,25 +18,47 @@ def load_json(file_path):
 def import_entities(data, json_directory):
     zone_obj = None
     for entity in data.get("Entities", []):
+        # Ensure "type" has only the first letter capitalized
+        if "type" in entity:
+            entity["type"] = entity["type"].title()
+        
+        # Ensure "shape" has only the first letter capitalized if it exists
+        if "shape" in entity:
+            entity["shape"] = entity["shape"].title()
+
         obj = object_creation.create_blender_object(entity)
         if obj is not None:
             # Special handling for zone objects
-            if entity.get("type", "").lower() == "zone":
-                obj["name"] = "zone"
+            if entity.get("type") == "Zone":
+                obj["name"] = "Zone"
                 zone_obj = obj
             
             # Set custom properties
             property_utils.set_custom_properties(obj, entity)
             
-            # Additional check to ensure zone objects always have "zone" as their name custom property
+            # Additional check to ensure zone objects always have "Zone" as their name custom property
             if obj.get("type") == "Zone":
-                obj["name"] = "zone"
+                obj["name"] = "Zone"
+
+            # Move the object to the appropriate collection
+            move_to_type_collection(obj, entity.get("type", "Unknown"))
 
             # Add transform update handler
             bpy.app.handlers.depsgraph_update_post.append(object_creation.create_transform_update_handler(obj))
         else:
             error_handling.log_import_error(entity)
     return zone_obj
+
+def move_to_type_collection(obj, entity_type):
+    # Get or create the collection for this entity type
+    collection = collection_utils.get_or_create_collection(entity_type)
+    
+    # Remove the object from all other collections
+    for coll in obj.users_collection:
+        coll.objects.unlink(obj)
+    
+    # Link the object to the type-specific collection
+    collection.objects.link(obj)
 
 def process_vircadia_json(file_path):
     data = load_json(file_path)
@@ -52,6 +74,10 @@ def process_vircadia_json(file_path):
         error_handling.log_warning("No zone entity found in the imported data.")
 
     world_setup.configure_world_and_viewport()
+    
+    # Clean up empty collections
+    collection_utils.remove_empty_collections()
+    
     print("Vircadia entities imported successfully.")
 
 def register():

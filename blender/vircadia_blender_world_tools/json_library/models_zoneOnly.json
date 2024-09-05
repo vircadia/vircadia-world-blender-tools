@@ -6,9 +6,9 @@
     "type": "Zone",
     "lastEdited": 1000000000000000,
     "parentID": "{00000000-0000-0000-0000-000000000000}",
-    "name": "Name_Here",
+    "name": "",
     "userData": "{\"environment\":{\"environmentTexture\":\"URL_Here\"},\"renderingPipeline\":{\"fxaaEnabled\":true,\"glowLayer\":{\"blurKernelSize\":16,\"intensity\":1.5},\"glowLayerEnabled\":true}}",
-    "href": "URL_Here",
+    "href": "",
     "description": "Description_here",
     "position": {
         "x": 0.0000000000000000,
@@ -95,7 +95,7 @@
         "hazeAltitudeEffect": true,
         "hazeCeiling": 1,
         "hazeBaseRef": 25,
-        "hazeBackgroundBlend": 1.0000000000000000
+        "hazeBackgroundBlend": 0.0000000000000000
     },
     "bloom": {
         "bloomIntensity": 0.20000000000000000,
