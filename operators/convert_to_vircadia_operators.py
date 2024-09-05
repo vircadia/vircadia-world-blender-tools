@@ -12,9 +12,9 @@ class VIRCADIA_OT_convert_to_vircadia(Operator):
     def execute(self, context):
         obj = context.active_object
         if obj and obj.type == 'MESH':
-            # Load the models_modelOnly.json template
+            # Load the models_model.json template
             addon_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-            json_path = os.path.join(addon_path, "json_library", "models_modelOnly.json")
+            json_path = os.path.join(addon_path, "templates", "models_model.json")
             
             with open(json_path, 'r') as f:
                 template = json.load(f)

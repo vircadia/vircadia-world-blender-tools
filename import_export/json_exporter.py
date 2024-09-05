@@ -89,16 +89,16 @@ def load_entity_template(entity_type):
     
     # Map entity types to their corresponding template files
     template_map = {
-        "box": "shapeOnly",
-        "sphere": "shapeOnly",
-        "shape": "shapeOnly",
+        "box": "shape",
+        "sphere": "shape",
+        "shape": "shape",
         # Add other shape types here as needed
     }
     
     # Get the correct template name, defaulting to the entity type if not in the map
     template_name = template_map.get(entity_type.lower(), entity_type.lower())
     
-    template_path = os.path.join(addon_path, "json_library", f"models_{template_name}Only.json")
+    template_path = os.path.join(addon_path, "templates", f"template_{template_name}.json")
     
     try:
         with open(template_path, 'r') as f:

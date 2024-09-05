@@ -17,19 +17,19 @@ class VIRCADIA_OT_create_entity(Operator):
         # Load the appropriate template JSON based on entity type
         addon_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
         if entity_type == 'model':
-            json_path = os.path.join(addon_path, "json_library", "models_modelOnly.json")
+            json_path = os.path.join(addon_path, "templates", "models_model.json")
         elif entity_type == 'image':
-            json_path = os.path.join(addon_path, "json_library", "models_imageOnly.json")
+            json_path = os.path.join(addon_path, "templates", "models_image.json")
         elif entity_type == 'light':
-            json_path = os.path.join(addon_path, "json_library", "models_lightOnly.json")
+            json_path = os.path.join(addon_path, "templates", "models_light.json")
         elif entity_type == 'text':
-            json_path = os.path.join(addon_path, "json_library", "models_textOnly.json")
+            json_path = os.path.join(addon_path, "templates", "models_text.json")
         elif entity_type == 'web':
-            json_path = os.path.join(addon_path, "json_library", "models_webOnly.json")
+            json_path = os.path.join(addon_path, "templates", "models_web.json")
         elif entity_type == 'zone':
-            json_path = os.path.join(addon_path, "json_library", "models_zoneOnly.json")
+            json_path = os.path.join(addon_path, "templates", "models_zone.json")
         else:
-            json_path = os.path.join(addon_path, "json_library", "models_shapeOnly.json")
+            json_path = os.path.join(addon_path, "templates", "models_shape.json")
         
         with open(json_path, 'r') as f:
             template = json.load(f)
