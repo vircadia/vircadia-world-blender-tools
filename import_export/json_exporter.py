@@ -172,4 +172,5 @@ def register():
     bpy.utils.register_class(EXPORT_OT_vircadia_json)
 
 def unregister():
-    bpy.utils.unregister_class(EXPORT_OT_vircadia_json)
+    if hasattr(bpy.types, EXPORT_OT_vircadia_json.__name__):
+        bpy.utils.unregister_class(EXPORT_OT_vircadia_json)

@@ -3,7 +3,7 @@ from bpy.types import Panel
 from ..utils import property_utils, panel_utils
 
 class VIRCADIA_PT_custom_properties(Panel):
-    bl_label = "Vircadia Properties"
+    bl_label = "Entity Properties"
     bl_idname = "VIEW3D_PT_vircadia_custom_properties"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
