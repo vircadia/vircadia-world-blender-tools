@@ -42,6 +42,9 @@ def import_entities(data, json_directory):
 
             # Move the object to the appropriate collection
             move_to_type_collection(obj, entity.get("type", "Unknown"))
+            
+            # Add transform update handler
+            bpy.app.handlers.depsgraph_update_post.append(object_creation.create_transform_update_handler(obj))
 
         else:
             error_handling.log_import_error(entity)

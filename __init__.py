@@ -25,8 +25,7 @@ def register():
 
 def unregister():
     # Unregister the transform update handler
-    if utils.object_creation.transform_update_handler in bpy.app.handlers.depsgraph_update_post:
-        bpy.app.handlers.depsgraph_update_post.remove(utils.object_creation.transform_update_handler)
+    bpy.app.handlers.depsgraph_update_post.remove(utils.object_creation.transform_update_handler)
 
     operators.unregister()
     utils.unregister()

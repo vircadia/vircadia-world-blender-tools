@@ -138,21 +138,9 @@ def unregister():
     for obj in bpy.data.objects:
         if "name" in obj:
             for prop_name in ['position_x', 'position_y', 'position_z',
-                            'dimensions_x', 'dimensions_y', 'dimensions_z',
-                            'rotation_x', 'rotation_y', 'rotation_z', 'rotation_w']:
+                              'dimensions_x', 'dimensions_y', 'dimensions_z',
+                              'rotation_x', 'rotation_y', 'rotation_z', 'rotation_w']:
                 if prop_name in obj:
-                    # Remove the driver if it exists
-                    if obj.animation_data and obj.animation_data.drivers:
-                        for driver in obj.animation_data.drivers:
-                            if driver.data_path == f'["{prop_name}"]':
-                                obj.animation_data.drivers.remove(driver)
-                    
-                    # Remove the custom property
-                    del obj[prop_name]
-                
-                # Remove the custom property
-                del obj[prop_name]
-            
-            # Remove the update function
-            if f"{prop_name}_update" in obj:
-                del obj[f"{prop_name}_update"]
+                    obj.property_unregister(prop_name)
+                    if f"{prop_name}_update" in obj:
+                        del obj[f"{prop_name}_update"]

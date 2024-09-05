@@ -69,7 +69,7 @@ class VIRCADIA_PT_main_panel(Panel):
 
         row = export_box.row()
         row.operator("export_scene.vircadia_json", text="Export JSON")
-        row.operator("export_scene.vircadia_gltf", text="Export GLTF")
+        row.operator("export_scene.vircadia_glb", text="Export GLB")
 
         # Visibility toggles
         box = layout.box()
