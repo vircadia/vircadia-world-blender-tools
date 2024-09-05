@@ -4,4 +4,5 @@ This is a Blender add-on that allows the creation of full Vircadia worlds within
 
 ## Requirements
 
-Blender Version [TBD]
+Blender Version 4.2 (LTS) or later.
+
