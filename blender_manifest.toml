@@ -1,0 +1,20 @@
+schema_version = "1.0.0"
+
+id = "vircadia_world_tools"
+version = "0.1.0"
+name = "Vircadia World Tools"
+tagline = "Create and edit Vircadia worlds in Blender"
+maintainer = "Vircadia Contributors <hello@vircadia.com>"
+type = "add-on"
+
+tags = ["Import-Export"]
+
+blender_version_min = "4.2.0"
+
+license = [
+  "SPDX:Apache-2.0",
+]
+
+[permissions]
+files = "Import/export Vircadia environments to/from disk"
+    

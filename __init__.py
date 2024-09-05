@@ -1,10 +1,10 @@
 bl_info = {
-    "name": "Vircadia Blender Importer/Exporter",
-    "author": "Ben Brennan",
-    "version": (0, 1),
+    "name": "Vircadia World Tools",
+    "author": "Vircadia Contributors",
+    "version": (0, 1, 0),
     "blender": (4, 2, 0),
     "location": "View3D > Sidebar > Vircadia",
-    "description": "Import and export Vircadia environments to/from Blender",
+    "description": "Create and edit Vircadia worlds in Blender",
     "category": "Import-Export",
 }
 
