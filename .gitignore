@@ -2,3 +2,6 @@ test/export/*
 test/import/*
 
 development-env/
+
+# Python
+__pycache__
