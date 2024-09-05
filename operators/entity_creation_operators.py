@@ -199,7 +199,7 @@ class VIRCADIA_OT_create_entity(Operator):
 
     def setup_zone_lighting(self, zone_obj, context):
         addon_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-        images_path = os.path.join(addon_path, "images")
+        images_path = os.path.join(addon_path, "assets", "default", "images")
 
         # Set skybox texture
         skybox_texture = context.scene.vircadia_skybox_texture or os.path.join(images_path, "Skybox.jpg")
