@@ -178,7 +178,9 @@ def register():
     bpy.app.handlers.depsgraph_update_post.append(keylight_update_handler)
 
 def unregister():
-    bpy.app.handlers.depsgraph_update_post.remove(handle_sun_updates)
-    bpy.app.handlers.depsgraph_update_post.remove(keylight_update_handler)
+    if handle_sun_updates in bpy.app.handlers.depsgraph_update_post:
+        bpy.app.handlers.depsgraph_update_post.remove(handle_sun_updates)
+    if keylight_update_handler in bpy.app.handlers.depsgraph_update_post:
+        bpy.app.handlers.depsgraph_update_post.remove(keylight_update_handler)
 
 print("world_setup.py loaded")

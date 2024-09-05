@@ -134,7 +134,7 @@ def register():
     bpy.app.handlers.load_post.append(load_handler)
 
 def unregister():
-    if hasattr(bpy.app.handlers, "load_post"):
+    # if hasattr(bpy.app.handlers, "load_post"):
         bpy.app.handlers.load_post.remove(load_handler)
         for obj in bpy.data.objects:
             if "name" in obj:
