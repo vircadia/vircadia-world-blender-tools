@@ -37,7 +37,7 @@ class VIRCADIA_OT_paste_content_path(Operator):
         return {'FINISHED'}
 
 class VIRCADIA_PT_main_panel(Panel):
-    bl_label = "Vircadia"
+    bl_label = "World Properties"
     bl_idname = "VIEW3D_PT_vircadia_main"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'

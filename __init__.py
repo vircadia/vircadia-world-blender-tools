@@ -1,3 +1,21 @@
+# Add this at the beginning of your file
+if "bpy" in locals():
+    import importlib
+    if "import_export" in locals():
+        importlib.reload(import_export)
+    if "ui" in locals():
+        importlib.reload(ui)
+    if "utils" in locals():
+        importlib.reload(utils)
+    if "operators" in locals():
+        importlib.reload(operators)
+
+import bpy
+from . import import_export
+from . import ui
+from . import utils
+from . import operators
+
 bl_info = {
     "name": "Vircadia World Tools",
     "author": "Vircadia Contributors",
@@ -7,12 +25,6 @@ bl_info = {
     "description": "Create and edit Vircadia worlds in Blender",
     "category": "Import-Export",
 }
-
-import bpy
-from . import import_export
-from . import ui
-from . import utils
-from . import operators
 
 def register():
     import_export.register()
@@ -25,7 +37,8 @@ def register():
 
 def unregister():
     # Unregister the transform update handler
-    bpy.app.handlers.depsgraph_update_post.remove(utils.object_creation.transform_update_handler)
+    if utils.object_creation.transform_update_handler in bpy.app.handlers.depsgraph_update_post:
+        bpy.app.handlers.depsgraph_update_post.remove(utils.object_creation.transform_update_handler)
 
     operators.unregister()
     utils.unregister()

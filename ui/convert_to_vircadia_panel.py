@@ -2,7 +2,7 @@ import bpy
 from bpy.types import Panel
 
 class VIRCADIA_PT_convert_to_vircadia(Panel):
-    bl_label = "Convert to Vircadia"
+    bl_label = "Convert to Entity to Vircadia"
     bl_idname = "VIEW3D_PT_vircadia_convert"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
