@@ -2,7 +2,8 @@ import bpy
 import json
 import os
 from bpy.types import Operator
-from ..utils import object_creation, property_utils, coordinate_utils, collection_utils, world_setup
+
+from ..utils import entities, object_creation, property_utils, coordinate_utils, collection_utils, world_setup
 
 class VIRCADIA_OT_create_entity(Operator):
     bl_idname = "vircadia.create_entity"
@@ -17,19 +18,19 @@ class VIRCADIA_OT_create_entity(Operator):
         # Load the appropriate template JSON based on entity type
         addon_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
         if entity_type == 'model':
-            json_path = os.path.join(addon_path, "templates", "models_model.json")
+            json_path = os.path.join(addon_path, "templates", f"{entities.ENTITY_TEMPLATES_JSON[entity_type]}")
         elif entity_type == 'image':
-            json_path = os.path.join(addon_path, "templates", "models_image.json")
+            json_path = os.path.join(addon_path, "templates", f"{entities.ENTITY_TEMPLATES_JSON[entity_type]}")
         elif entity_type == 'light':
-            json_path = os.path.join(addon_path, "templates", "models_light.json")
+            json_path = os.path.join(addon_path, "templates", f"{entities.ENTITY_TEMPLATES_JSON[entity_type]}")
         elif entity_type == 'text':
-            json_path = os.path.join(addon_path, "templates", "models_text.json")
+            json_path = os.path.join(addon_path, "templates", f"{entities.ENTITY_TEMPLATES_JSON[entity_type]}")
         elif entity_type == 'web':
-            json_path = os.path.join(addon_path, "templates", "models_web.json")
+            json_path = os.path.join(addon_path, "templates", f"{entities.ENTITY_TEMPLATES_JSON[entity_type]}")
         elif entity_type == 'zone':
-            json_path = os.path.join(addon_path, "templates", "models_zone.json")
+            json_path = os.path.join(addon_path, "templates", f"{entities.ENTITY_TEMPLATES_JSON[entity_type]}")
         else:
-            json_path = os.path.join(addon_path, "templates", "models_shape.json")
+            json_path = os.path.join(addon_path, "templates", f"{entities.ENTITY_TEMPLATES_JSON[entity_type]}")
         
         with open(json_path, 'r') as f:
             template = json.load(f)

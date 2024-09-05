@@ -8,7 +8,7 @@ def find_matching_object(filename):
             return obj
     return None
 
-def import_gltf(context, filepaths):
+def import_gltf_or_glb(context, filepaths):
     original_selection = context.selected_objects.copy()
     original_active = context.active_object
 

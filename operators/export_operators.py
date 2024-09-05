@@ -20,7 +20,7 @@ class EXPORT_OT_vircadia_gltf(bpy.types.Operator):
     filepath: bpy.props.StringProperty(subtype="FILE_PATH")
 
     def execute(self, context):
-        gltf_exporter.export_gltf(context, self.filepath)
+        gltf_exporter.export_glb(context, self.filepath)
         return {'FINISHED'}
 
     def invoke(self, context, event):

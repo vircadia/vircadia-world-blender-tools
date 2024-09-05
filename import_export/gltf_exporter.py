@@ -1,14 +1,14 @@
 import bpy
 import os
+from .. import config
 
-def export_gltf(context, filepath):
-    # Ensure the filename is 'environment.gltf' or 'environment.glb'
+def export_glb(context, filepath):
     directory = os.path.dirname(filepath)
-    filename = 'environment.glb' if filepath.lower().endswith('.glb') else 'environment.gltf'
+    filename = config.DEFAULT_GLB_EXPORT_FILENAME
     filepath = os.path.join(directory, filename)
 
     export_settings = {
-        'export_format': 'GLB' if filename.lower().endswith('.glb') else 'GLTF_SEPARATE',
+        'export_format': 'GLB',
         'use_selection': False,
         'export_apply': True,
         'export_animations': True,
@@ -34,12 +34,12 @@ def export_gltf(context, filepath):
 
     try:
         bpy.ops.export_scene.gltf(filepath=filepath, **export_settings)
-        print(f"Successfully exported GLTF to {filepath}")
+        print(f"Successfully exported GLB to {filepath}")
     except Exception as e:
-        print(f"Error exporting GLTF: {str(e)}")
+        print(f"Error exporting GLB: {str(e)}")
         return
 
-    print("GLTF export completed.")
+    print("GLB export completed.")
 
 def register():
     pass

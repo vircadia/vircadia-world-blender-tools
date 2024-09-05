@@ -2,16 +2,7 @@ import bpy
 from bpy.types import Panel
 from bpy.props import EnumProperty, StringProperty
 
-# Define allowed types
-ALLOWED_ENTITY_TYPES = [
-    'model',
-    'shape',
-    'light',
-    'text',
-    'web',
-    'zone',
-    'image',
-]
+from ..utils import entities
 
 ALLOWED_SHAPE_TYPES = [
     'box',
@@ -69,7 +60,8 @@ class VIRCADIA_PT_entity_creation(Panel):
         layout.operator("vircadia.create_entity")
 
 def get_entity_types(self, context):
-    return [(t, t.capitalize(), "", i) for i, t in enumerate(ALLOWED_ENTITY_TYPES)]
+    # TODO: Remove this shape check if you want to enable the creation of shapes again. HOWEVER, long term we should be removing shapes entirely from entities.
+    return [(t, t.capitalize(), "", i) for i, t in enumerate(entities.ENTITY_TYPES) if t != "shape"]
 
 def get_shape_types(self, context):
     return [(t, t.capitalize(), "", i) for i, t in enumerate(ALLOWED_SHAPE_TYPES)]

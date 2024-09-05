@@ -2,7 +2,7 @@ import bpy
 import json
 import os
 from bpy.types import Operator
-from ..utils import property_utils, collection_utils
+from ..utils import property_utils, collection_utils, entities
 
 class VIRCADIA_OT_convert_to_vircadia(Operator):
     bl_idname = "vircadia.convert_to_vircadia"
@@ -12,9 +12,9 @@ class VIRCADIA_OT_convert_to_vircadia(Operator):
     def execute(self, context):
         obj = context.active_object
         if obj and obj.type == 'MESH':
-            # Load the models_model.json template
+            # Load the template_model.json template
             addon_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-            json_path = os.path.join(addon_path, "templates", "models_model.json")
+            json_path = os.path.join(addon_path, "templates", f"{entities.ENTITY_TEMPLATES_JSON['model']}")
             
             with open(json_path, 'r') as f:
                 template = json.load(f)

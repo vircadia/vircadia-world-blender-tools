@@ -38,7 +38,7 @@ class IMPORT_OT_vircadia_gltf(Operator, ImportHelper):
 
     def execute(self, context):
         filepaths = [os.path.join(self.directory, name.name) for name in self.files]
-        gltf_importer.import_gltf(context, filepaths)
+        gltf_importer.import_gltf_or_glb(context, filepaths)
         return {'FINISHED'}
 
 def register():

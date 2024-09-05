@@ -2,6 +2,7 @@ import bpy
 import json
 import os
 from urllib.parse import urljoin
+from .. import config
 from ..utils import coordinate_utils, property_utils
 
 def get_vircadia_entity_data(obj, content_path):
@@ -123,7 +124,7 @@ def export_vircadia_json(context, filepath):
     # Add the Model entity from the template
     model_template = load_entity_template("model")
     model_entity = model_template["Entities"][0]
-    model_entity["modelURL"] = urljoin(content_path, "environment.glb")
+    model_entity["modelURL"] = urljoin(content_path, config.DEFAULT_GLB_EXPORT_FILENAME)
     scene_data["Entities"].append(model_entity)
 
     for obj in bpy.data.objects:
@@ -158,13 +159,13 @@ class EXPORT_OT_vircadia_json(bpy.types.Operator):
                 blend_filepath = "untitled"
             else:
                 blend_filepath = os.path.splitext(blend_filepath)[0]
-            self.filepath = os.path.join(os.path.dirname(blend_filepath), "models.json")
+            self.filepath = os.path.join(os.path.dirname(blend_filepath), config.DEFAULT_JSON_EXPORT_FILENAME)
 
         export_vircadia_json(context, self.filepath)
         return {'FINISHED'}
 
     def invoke(self, context, event):
-        self.filepath = "models.json"
+        self.filepath = config.DEFAULT_JSON_EXPORT_FILENAME
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
