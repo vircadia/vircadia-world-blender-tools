@@ -178,7 +178,4 @@ def register():
     bpy.utils.register_class(EXPORT_OT_vircadia_json)
 
 def unregister():
-    try:
-        bpy.utils.unregister_class(EXPORT_OT_vircadia_json)
-    except RuntimeError:
-        print(f"Warning: {EXPORT_OT_vircadia_json.__name__} was not registered, skipping unregister.")
+    bpy.utils.unregister_class(EXPORT_OT_vircadia_json)

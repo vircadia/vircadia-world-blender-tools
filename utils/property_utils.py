@@ -150,6 +150,9 @@ def unregister():
                     # Remove the custom property
                     del obj[prop_name]
                 
-                # Remove the update function
-                if f"{prop_name}_update" in obj:
-                    del obj[f"{prop_name}_update"]
+                # Remove the custom property
+                del obj[prop_name]
+            
+            # Remove the update function
+            if f"{prop_name}_update" in obj:
+                del obj[f"{prop_name}_update"]
