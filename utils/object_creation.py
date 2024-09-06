@@ -61,7 +61,7 @@ def create_blender_object(entity):
 
     if "dimensions" in entity:
         x, y, z = entity["dimensions"].values()
-        obj.scale = coordinate_utils.vircadia_to_blender_coordinates(x, y, z)
+        obj.scale = coordinate_utils.vircadia_to_blender_dimensions(x, y, z)
 
     if "rotation" in entity:
         x, y, z, w = entity["rotation"].values()
@@ -94,7 +94,7 @@ def create_transform_update_handler(obj):
         obj["position_z"] = vircadia_pos[2]
 
         # Update dimensions (scale)
-        vircadia_scale = coordinate_utils.blender_to_vircadia_coordinates(*obj.scale)
+        vircadia_scale = coordinate_utils.blender_to_vircadia_dimensions(*obj.scale)
         obj["dimensions_x"] = vircadia_scale[0]
         obj["dimensions_y"] = vircadia_scale[1]
         obj["dimensions_z"] = vircadia_scale[2]

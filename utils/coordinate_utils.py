@@ -5,9 +5,17 @@ def vircadia_to_blender_coordinates(x, y, z):
     # Convert from Y-up (right-handed) to Z-up (right-handed)
     return x, -z, y
 
+def vircadia_to_blender_dimensions(x, y, z):
+    # Convert dimensions from Vircadia to Blender
+    return x, z, y
+
 def blender_to_vircadia_coordinates(x, y, z):
     # Convert from Z-up (right-handed) to Y-up (right-handed)
     return x, z, -y
+
+def blender_to_vircadia_dimensions(x, y, z):
+    # Convert dimensions from Blender to Vircadia
+    return x, y, z
 
 def vircadia_to_blender_rotation(x, y, z, w):
     # Convert quaternion from Y-up to Z-up
@@ -50,4 +58,4 @@ def vircadia_to_blender_scale(x, y, z):
 def blender_to_vircadia_scale(x, y, z):
     # Blender uses scale, Vircadia uses dimensions
     # Assuming a default cube size of 1x1x1 in Blender
-    return x, z, y
+    return x, y, z

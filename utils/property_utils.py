@@ -46,8 +46,14 @@ def set_custom_properties(obj, data, prefix=""):
                     set_custom_properties(obj, user_data_json, "")  # Remove prefix for userData
                 except json.JSONDecodeError:
                     print(f"Failed to decode userData JSON: {value}")
-            # No conversion for position and dimensions in custom properties
-            elif key in ["position", "dimensions", "rotation"] and isinstance(value, dict):
+            # Convert dimensions to Blender coordinate system
+            elif key == "dimensions" and isinstance(value, dict):
+                x, y, z = value.get('x', 0), value.get('y', 0), value.get('z', 0)
+                blender_dims = coordinate_utils.vircadia_to_blender_dimensions(x, y, z)
+                for axis, axis_value in zip(['x', 'y', 'z'], blender_dims):
+                    set_custom_properties(obj, axis_value, f"{new_prefix}_{axis}")
+            # No conversion for position in custom properties
+            elif key in ["position", "rotation"] and isinstance(value, dict):
                 for axis, axis_value in value.items():
                     set_custom_properties(obj, axis_value, f"{new_prefix}_{axis}")
             else:
@@ -99,7 +105,7 @@ def update_transform_from_properties(obj):
     # Update dimensions (scale)
     if all(f"dimensions_{axis}" in obj for axis in ['x', 'y', 'z']):
         vircadia_scale = (obj["dimensions_x"], obj["dimensions_y"], obj["dimensions_z"])
-        obj.scale = coordinate_utils.vircadia_to_blender_coordinates(*vircadia_scale)
+        obj.scale = coordinate_utils.vircadia_to_blender_dimensions(*vircadia_scale)
 
     # Update rotation
     if all(f"rotation_{axis}" in obj for axis in ['x', 'y', 'z', 'w']):

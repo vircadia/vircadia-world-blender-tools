@@ -60,8 +60,7 @@ class VIRCADIA_PT_entity_creation(Panel):
         layout.operator("vircadia.create_entity")
 
 def get_entity_types(self, context):
-    # TODO: Remove this shape check if you want to enable the creation of shapes again. HOWEVER, long term we should be removing shapes entirely from entities.
-    return [(t, t.capitalize(), "", i) for i, t in enumerate(entities.ENTITY_TYPES) if t != "shape"]
+    return [(t, t.capitalize(), "", i) for i, t in enumerate(entities.ENTITY_TYPES)]
 
 def get_shape_types(self, context):
     return [(t, t.capitalize(), "", i) for i, t in enumerate(ALLOWED_SHAPE_TYPES)]
@@ -98,7 +97,7 @@ def register():
     bpy.types.Scene.vircadia_entity_type = EnumProperty(
         name="Entity Type",
         items=get_entity_types,
-        default=1  # Index of 'shape' in ALLOWED_ENTITY_TYPES
+        default=0  # Set default to 0 (first item in the list)
     )
 
     bpy.types.Scene.vircadia_shape_type = EnumProperty(
