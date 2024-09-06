@@ -5,6 +5,9 @@ from bpy.types import Operator
 
 from ..utils import entities, object_creation, property_utils, coordinate_utils, collection_utils, world_setup
 
+def get_entity_types(self, context):
+    return [(t, t.capitalize(), "", i) for i, t in enumerate(entities.ENTITY_TYPES)]
+
 class VIRCADIA_OT_create_entity(Operator):
     bl_idname = "vircadia.create_entity"
     bl_label = "Create Entity"
@@ -281,9 +284,15 @@ class VIRCADIA_OT_create_entity(Operator):
 
 def register():
     bpy.utils.register_class(VIRCADIA_OT_create_entity)
+    bpy.types.Scene.vircadia_entity_type = bpy.props.EnumProperty(
+        name="Entity Type",
+        items=get_entity_types,
+        default=0  # Set default to 0 (first item in the list)
+    )
 
 def unregister():
     bpy.utils.unregister_class(VIRCADIA_OT_create_entity)
+    del bpy.types.Scene.vircadia_entity_type
 
 if __name__ == "__main__":
     register()
