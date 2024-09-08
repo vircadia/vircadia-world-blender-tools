@@ -48,14 +48,10 @@ class VIRCADIA_PT_entity_creation(Panel):
         elif scene.vircadia_entity_type == 'zone':
             box = layout.box()
             box.label(text="Skybox Texture:")
-            row = box.row(align=True)
-            row.prop(scene, "vircadia_skybox_texture", text="")
-            row.operator("vircadia.select_skybox_texture", text="", icon='FILE_FOLDER')
+            box.prop(scene, "vircadia_skybox_texture", text="")
             
             box.label(text="Environment Texture:")
-            row = box.row(align=True)
-            row.prop(scene, "vircadia_environment_texture", text="")
-            row.operator("vircadia.select_environment_texture", text="", icon='FILE_FOLDER')
+            box.prop(scene, "vircadia_environment_texture", text="")
 
         layout.operator("vircadia.create_entity")
 
@@ -64,34 +60,6 @@ def get_entity_types(self, context):
 
 def get_shape_types(self, context):
     return [(t, t.capitalize(), "", i) for i, t in enumerate(ALLOWED_SHAPE_TYPES)]
-
-class VIRCADIA_OT_select_skybox_texture(bpy.types.Operator):
-    bl_idname = "vircadia.select_skybox_texture"
-    bl_label = "Select Skybox Texture"
-    
-    filepath: bpy.props.StringProperty(subtype="FILE_PATH")
-    
-    def execute(self, context):
-        context.scene.vircadia_skybox_texture = self.filepath
-        return {'FINISHED'}
-
-    def invoke(self, context, event):
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
-
-class VIRCADIA_OT_select_environment_texture(bpy.types.Operator):
-    bl_idname = "vircadia.select_environment_texture"
-    bl_label = "Select Environment Texture"
-    
-    filepath: bpy.props.StringProperty(subtype="FILE_PATH")
-    
-    def execute(self, context):
-        context.scene.vircadia_environment_texture = self.filepath
-        return {'FINISHED'}
-
-    def invoke(self, context, event):
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
 
 def register():
     bpy.types.Scene.vircadia_entity_type = EnumProperty(
@@ -125,13 +93,9 @@ def register():
     )
 
     bpy.utils.register_class(VIRCADIA_PT_entity_creation)
-    bpy.utils.register_class(VIRCADIA_OT_select_skybox_texture)
-    bpy.utils.register_class(VIRCADIA_OT_select_environment_texture)
 
 def unregister():
     bpy.utils.unregister_class(VIRCADIA_PT_entity_creation)
-    bpy.utils.unregister_class(VIRCADIA_OT_select_skybox_texture)
-    bpy.utils.unregister_class(VIRCADIA_OT_select_environment_texture)
 
     del bpy.types.Scene.vircadia_primitive_type
     del bpy.types.Scene.vircadia_shape_type

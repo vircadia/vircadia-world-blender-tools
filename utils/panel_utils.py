@@ -1,4 +1,5 @@
 import bpy
+from mathutils import Vector
 from ..utils import property_utils
 
 PROPERTY_GROUPS = {
@@ -36,6 +37,10 @@ def draw_custom_properties(context, layout, obj):
         if property_utils.should_filter_property(key):
             continue
 
+        # Skip the old keylight properties
+        if key.startswith("keyLight_color_") or key in ["keyLight_intensity", "keyLight_direction_x", "keyLight_direction_y", "keyLight_direction_z"]:
+            continue
+
         group = "Misc"
         for prefix, group_name in PROPERTY_GROUPS.items():
             if key.startswith(prefix):
@@ -51,7 +56,7 @@ def draw_custom_properties(context, layout, obj):
         del grouped_properties["Transform"]
 
     for group, properties in grouped_properties.items():
-        if properties:
+        if properties or (group == "Lighting" and obj.get("type") == "Zone"):
             box = layout.box()
             box.label(text=group)
             
@@ -77,10 +82,8 @@ def draw_custom_properties(context, layout, obj):
                     draw_property(box, obj, key, key)
                     drawn_properties.add(key)
 
-    if obj.get("type") == "Zone":
-        keylight_box = layout.box()
-        keylight_box.label(text="Key Light")
-        draw_keylight_properties(keylight_box, obj)
+            if group == "Lighting" and obj.get("type") == "Zone":
+                draw_keylight_properties(box, obj)
 
 def draw_property(box, obj, prop_name, full_prop_name):
     row = box.row()
@@ -141,13 +144,12 @@ def draw_keylight_properties(layout, zone_obj):
         layout.label(text="No key light found")
         return
 
+    layout.label(text="Key Light")
+
     # Draw keyLight color
-    color_props = {
-        "red": "keyLight_color_red",
-        "green": "keyLight_color_green",
-        "blue": "keyLight_color_blue"
-    }
-    draw_color_property(layout, zone_obj, "Color", color_props)
+    row = layout.row(align=True)
+    row.label(text="Color")
+    row.prop(keylight.data, "color", text="")
 
     # Draw keyLight direction
     row = layout.row(align=True)
@@ -155,21 +157,29 @@ def draw_keylight_properties(layout, zone_obj):
     row.prop(keylight, "rotation_euler", text="")
 
     # Draw keyLight intensity
-    draw_property(layout, zone_obj, "Intensity", "keyLight_intensity")
+    row = layout.row(align=True)
+    row.label(text="Intensity")
+    row.prop(keylight.data, "energy", text="")
 
-def update_keylight(zone_obj):
+def update_keylight_color(self, context):
+    zone_obj = self
     keylight = find_keylight(zone_obj)
     if keylight:
-        # Update color
-        keylight.data.color[0] = zone_obj.get("keyLight_color_red", 255) / 255
-        keylight.data.color[1] = zone_obj.get("keyLight_color_green", 255) / 255
-        keylight.data.color[2] = zone_obj.get("keyLight_color_blue", 255) / 255
+        zone_obj["keyLight_color_red"] = int(keylight.data.color[0] * 255)
+        zone_obj["keyLight_color_green"] = int(keylight.data.color[1] * 255)
+        zone_obj["keyLight_color_blue"] = int(keylight.data.color[2] * 255)
 
-        # Update intensity
-        keylight.data.energy = zone_obj.get("keyLight_intensity", 1.0)
+def update_keylight_intensity(self, context):
+    zone_obj = self
+    keylight = find_keylight(zone_obj)
+    if keylight:
+        zone_obj["keyLight_intensity"] = keylight.data.energy
 
-        # Update zone_obj custom properties with keylight rotation
-        direction = keylight.rotation_euler.to_quaternion() @ bpy.data.objects['KeyLight'].matrix_world.to_3x3() @ Vector((0, 0, -1))
+def update_keylight_direction(self, context):
+    zone_obj = self
+    keylight = find_keylight(zone_obj)
+    if keylight:
+        direction = keylight.rotation_euler.to_quaternion() @ Vector((0, 0, -1))
         zone_obj["keyLight_direction_x"] = direction.x
         zone_obj["keyLight_direction_y"] = direction.y
         zone_obj["keyLight_direction_z"] = direction.z
@@ -177,10 +187,50 @@ def update_keylight(zone_obj):
 def keylight_update_handler(scene):
     for obj in scene.objects:
         if obj.get("type") == "Zone":
-            update_keylight(obj)
+            keylight = find_keylight(obj)
+            if keylight:
+                # Update color
+                keylight.data.color[0] = obj.get("keyLight_color_red", 255) / 255
+                keylight.data.color[1] = obj.get("keyLight_color_green", 255) / 255
+                keylight.data.color[2] = obj.get("keyLight_color_blue", 255) / 255
+
+                # Update intensity
+                keylight.data.energy = obj.get("keyLight_intensity", 1.0)
+
+                # Update direction
+                direction = Vector((
+                    obj.get("keyLight_direction_x", 0),
+                    obj.get("keyLight_direction_y", 0),
+                    obj.get("keyLight_direction_z", 0)
+                ))
+                keylight.rotation_euler = direction.to_track_quat('-Z', 'Y').to_euler()
 
 def register():
+    bpy.types.Object.keylight_color = bpy.props.FloatVectorProperty(
+        name="Key Light Color",
+        subtype='COLOR',
+        size=3,
+        min=0.0,
+        max=1.0,
+        update=update_keylight_color
+    )
+    bpy.types.Object.keylight_intensity = bpy.props.FloatProperty(
+        name="Key Light Intensity",
+        min=0.0,
+        update=update_keylight_intensity
+    )
+    bpy.types.Object.keylight_direction = bpy.props.FloatVectorProperty(
+        name="Key Light Direction",
+        size=3,
+        update=update_keylight_direction
+    )
     bpy.app.handlers.depsgraph_update_post.append(keylight_update_handler)
 
 def unregister():
+    del bpy.types.Object.keylight_color
+    del bpy.types.Object.keylight_intensity
+    del bpy.types.Object.keylight_direction
     bpy.app.handlers.depsgraph_update_post.remove(keylight_update_handler)
+
+if __name__ == "__main__":
+    register()
