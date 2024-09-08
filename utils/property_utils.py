@@ -1,5 +1,5 @@
-import json
 import bpy
+import json
 from . import coordinate_utils
 
 # List of properties to skip
@@ -96,7 +96,7 @@ def get_custom_properties(obj):
             properties[key] = obj[key]
     return properties
 
-def update_transform_from_properties(obj):
+def update_blender_transform_from_properties(obj):
     # Update position
     if all(f"position_{axis}" in obj for axis in ['x', 'y', 'z']):
         vircadia_pos = (obj["position_x"], obj["position_y"], obj["position_z"])
@@ -115,7 +115,7 @@ def update_transform_from_properties(obj):
 
 def create_property_update_handler(obj, prop_name):
     def property_update_handler(self, context):
-        update_transform_from_properties(obj)
+        update_blender_transform_from_properties(obj)
 
     return property_update_handler
 
@@ -125,7 +125,6 @@ def register_property_update_handlers(obj):
                       'rotation_x', 'rotation_y', 'rotation_z', 'rotation_w']:
         if prop_name in obj:
             obj.property_unregister(prop_name)
-            obj.property_overridable_library_set(prop_name, True)
             obj.property_overridable_library_set(prop_name, True)
             obj[f"{prop_name}_update"] = create_property_update_handler(obj, prop_name)
             obj.driver_add(f'["{prop_name}"]').driver.expression = f"{prop_name}_update"

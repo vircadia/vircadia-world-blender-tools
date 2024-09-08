@@ -1,9 +1,31 @@
 import bpy
 import json
 import os
+import uuid
 from urllib.parse import urljoin
 from .. import config
 from ..utils import coordinate_utils, property_utils, visibility_utils
+
+def generate_random_uuid():
+    return str(uuid.uuid4())
+
+def replace_placeholder_uuid(data):
+    if isinstance(data, dict):
+        for key, value in data.items():
+            if isinstance(value, str) and value == "{10000000-0000-0000-0000-000000000000}":
+                new_uuid = generate_random_uuid()
+                print(f"Replacing UUID: {value} with {new_uuid}")
+                data[key] = "{" + new_uuid + "}"
+            elif isinstance(value, (dict, list)):
+                replace_placeholder_uuid(value)
+    elif isinstance(data, list):
+        for i, item in enumerate(data):
+            if isinstance(item, str) and item == "{10000000-0000-0000-0000-000000000000}":
+                new_uuid = generate_random_uuid()
+                print(f"Replacing UUID in list: {item} with {new_uuid}")
+                data[i] = "{" + new_uuid + "}"
+            elif isinstance(item, (dict, list)):
+                replace_placeholder_uuid(item)
 
 def get_vircadia_entity_data(obj, content_path):
     entity_data = {}
@@ -124,6 +146,9 @@ def export_vircadia_json(context, filepath):
     # Add the Model entity from the template
     model_template = load_entity_template("model")
     model_entity = model_template["Entities"][0]
+    print("Before UUID replacement in model entity:", json.dumps(model_entity, indent=2))
+    replace_placeholder_uuid(model_entity)
+    print("After UUID replacement in model entity:", json.dumps(model_entity, indent=2))
     model_entity["modelURL"] = urljoin(content_path, config.DEFAULT_GLB_EXPORT_FILENAME)
     scene_data["Entities"].append(model_entity)
 
@@ -141,7 +166,15 @@ def export_vircadia_json(context, filepath):
                     template_entity = template["Entities"][0]
                     merged_entity = {**template_entity, **entity_data}
                     
+                    print(f"Before UUID replacement for {entity_type}:", json.dumps(merged_entity, indent=2))
+                    replace_placeholder_uuid(merged_entity)
+                    print(f"After UUID replacement for {entity_type}:", json.dumps(merged_entity, indent=2))
+                    
                     scene_data["Entities"].append(merged_entity)
+
+        print("Before final UUID replacement in scene data:", json.dumps(scene_data, indent=2))
+        replace_placeholder_uuid(scene_data)
+        print("After final UUID replacement in scene data:", json.dumps(scene_data, indent=2))
 
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
 

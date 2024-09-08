@@ -1,5 +1,6 @@
 import bpy
 import os
+from mathutils import Vector
 from . import coordinate_utils, collection_utils
 
 def extract_filename_from_url(url):
@@ -13,7 +14,7 @@ def get_blender_object_type(vircadia_type):
         "text": "FONT",
         "image": "EMPTY",
         "web": "EMPTY",
-        "zone": "EMPTY",
+        "zone": "MESH",
         "particle": "EMPTY",
     }
     return type_mapping.get(vircadia_type.lower(), "EMPTY")
@@ -28,8 +29,8 @@ def create_blender_object(entity):
 
     # Determine the name for both the Blender object and the custom property
     if vircadia_type == "zone":
-        custom_name = "zone"
-        blender_name = "zone"
+        custom_name = "Zone"
+        blender_name = "Zone"
     elif vircadia_type == "model" and "modelURL" in entity:
         custom_name = extract_filename_from_url(entity["modelURL"])
         blender_name = entity.get("name", custom_name)
@@ -40,7 +41,9 @@ def create_blender_object(entity):
     collection = collection_utils.get_or_create_collection(vircadia_type)
     bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[collection.name]
 
-    if blender_type == "MESH":
+    if vircadia_type == "zone":
+        bpy.ops.mesh.primitive_cube_add(size=1, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
+    elif blender_type == "MESH":
         bpy.ops.mesh.primitive_cube_add(size=1, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
     elif blender_type == "LIGHT":
         bpy.ops.object.light_add(type='POINT', location=(0, 0, 0))
@@ -112,13 +115,24 @@ def create_transform_update_handler(obj):
 
     return transform_update_handler
 
-def register():
-    bpy.app.handlers.depsgraph_update_post.append(transform_update_handler)
-
-def unregister():
-    bpy.app.handlers.depsgraph_update_post.remove(transform_update_handler)
+def keylight_transform_update_handler(scene):
+    for obj in bpy.data.objects:
+        if obj.name.startswith("keyLight_") and obj.parent and obj.parent.get("type") == "Zone":
+            zone_obj = obj.parent
+            direction = obj.rotation_euler.to_quaternion() @ Vector((0, 0, -1))
+            zone_obj["keyLight_direction_x"] = direction.x
+            zone_obj["keyLight_direction_y"] = direction.y
+            zone_obj["keyLight_direction_z"] = direction.z
 
 def transform_update_handler(scene):
     for obj in bpy.data.objects:
         if "name" in obj:
             create_transform_update_handler(obj)(scene)
+
+def register():
+    bpy.app.handlers.depsgraph_update_post.append(transform_update_handler)
+    bpy.app.handlers.depsgraph_update_post.append(keylight_transform_update_handler)
+
+def unregister():
+    bpy.app.handlers.depsgraph_update_post.remove(keylight_transform_update_handler)
+    bpy.app.handlers.depsgraph_update_post.remove(transform_update_handler)

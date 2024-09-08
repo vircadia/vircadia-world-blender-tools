@@ -7,7 +7,7 @@
     "lastEdited": 1000000000000000,
     "parentID": "{00000000-0000-0000-0000-000000000000}",
     "name": "",
-    "userData": "{\"environment\":{\"environmentTexture\":\"URL_Here\"},\"renderingPipeline\":{\"fxaaEnabled\":true,\"glowLayer\":{\"blurKernelSize\":16,\"intensity\":1.5},\"glowLayerEnabled\":true}}",
+    "userData": "{\"environment\":{\"environmentTexture\":\"\"},\"renderingPipeline\":{\"fxaaEnabled\":true,\"glowLayer\":{\"blurKernelSize\":16,\"intensity\":1.5},\"glowLayerEnabled\":true}}",
     "href": "",
     "description": "",
     "position": {
@@ -47,10 +47,10 @@
     "cloneable": false,
     "cloneDynamic": false,
     "cloneAvatarEntity": false,
-    "script": "URL_Here",
-    "serverScripts": "URL_Here",
+    "script": "",
+    "serverScripts": "",
     "shapeType": "box",
-    "compoundShapeURL": "URL_Here",
+    "compoundShapeURL": "",
     "keyLight": {
         "color": {
             "red": 255,
@@ -68,7 +68,7 @@
     },
     "ambientLight": {
         "ambientIntensity": 1,
-        "ambientURL": "URL_here"
+        "ambientURL": ""
     },
     "skybox": {
         "color": {
@@ -76,7 +76,7 @@
             "green": 255,
             "blue": 255
         },
-        "url": "URL_Here"
+        "url": ""
     },
     "haze": {
         "hazeRange": 3500,

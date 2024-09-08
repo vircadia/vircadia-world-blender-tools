@@ -32,6 +32,8 @@ def import_entities(data, json_directory):
             if entity.get("type") == "Zone":
                 obj["name"] = "Zone"
                 zone_obj = obj
+                # Set display type to wireframe for zones
+                obj.display_type = 'WIRE'
             
             # Set custom properties
             property_utils.set_custom_properties(obj, entity)

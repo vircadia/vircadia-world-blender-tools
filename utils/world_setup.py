@@ -109,9 +109,8 @@ def update_sun_direction(zone_obj, sun_object):
     direction_y = zone_obj.get("keyLight_direction_y", 0)
     direction_z = zone_obj.get("keyLight_direction_z", 0)
 
-    # Convert direction from Y-up to Z-up
-    blender_direction = coordinate_utils.vircadia_to_blender_coordinates(direction_x, direction_y, direction_z)
-    sun_object.rotation_euler = Vector(blender_direction).to_track_quat('-Z', 'Y').to_euler()
+    # Use the direction directly without conversion
+    sun_object.rotation_euler = Vector((direction_x, direction_y, direction_z)).to_track_quat('-Z', 'Y').to_euler()
     print(f"Updated sun direction: X={direction_x}, Y={direction_y}, Z={direction_z}")
 
 def update_keylight(zone_obj):
@@ -134,11 +133,11 @@ def update_keylight_from_sun(sun_object):
         zone_obj["keyLight_color_blue"] = int(sun_object.data.color[2] * 255)
         print(f"Updated color: R={zone_obj['keyLight_color_red']}, G={zone_obj['keyLight_color_green']}, B={zone_obj['keyLight_color_blue']}")
 
-        # Update direction
-        vircadia_direction = coordinate_utils.blender_to_vircadia_coordinates(*sun_object.rotation_euler)
-        zone_obj["keyLight_direction_x"] = vircadia_direction[0]
-        zone_obj["keyLight_direction_y"] = vircadia_direction[1]
-        zone_obj["keyLight_direction_z"] = vircadia_direction[2]
+        # Convert Blender rotation back to Vircadia direction
+        direction = sun_object.rotation_euler.to_quaternion() @ Vector((0, 0, -1))
+        zone_obj["keyLight_direction_x"] = direction.x
+        zone_obj["keyLight_direction_y"] = direction.y
+        zone_obj["keyLight_direction_z"] = direction.z
         print(f"Updated direction: X={zone_obj['keyLight_direction_x']}, Y={zone_obj['keyLight_direction_y']}, Z={zone_obj['keyLight_direction_z']}")
 
         # Update intensity

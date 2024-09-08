@@ -11,9 +11,23 @@ class VIRCADIA_PT_custom_properties(Panel):
 
     @classmethod
     def poll(cls, context):
-        return (context.active_object is not None and 
-                (context.active_object.get("name") is not None or 
-                 context.active_object.get("type") == "Zone"))
+        # Check if there are any selected objects
+        if not context.selected_objects:
+            return False
+
+        # Check the active object
+        obj = context.active_object
+        if obj is None:
+            return False
+        
+        # Check for Vircadia-specific properties
+        has_vircadia_props = False
+        for prop in obj.keys():
+            if not property_utils.should_filter_property(prop):
+                has_vircadia_props = True
+                break
+        
+        return has_vircadia_props or obj.get("type") == "Zone"
 
     def draw(self, context):
         layout = self.layout
