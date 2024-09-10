@@ -106,7 +106,7 @@ class VIRCADIA_OT_create_entity(Operator):
             bpy.ops.mesh.primitive_plane_add()
 
         obj = bpy.context.active_object
-        obj.name = f"Vircadia_{shape_type.capitalize()}"
+        obj.name = f"{shape_type.capitalize()}"
         entity["name"] = shape_type.capitalize()  # Set the name in the entity dictionary
 
         self.set_object_properties(obj, entity)
@@ -135,8 +135,8 @@ class VIRCADIA_OT_create_entity(Operator):
             bpy.ops.mesh.primitive_monkey_add()
 
         obj = bpy.context.active_object
-        obj.name = f"Vircadia_{primitive_type.capitalize()}"
-        entity["name"] = primitive_type.capitalize()  # Set the name in the entity dictionary
+        obj.name = "Model"
+        entity["name"] = "Model"  # Set the name in the entity dictionary
 
         self.set_object_properties(obj, entity)
         return obj
@@ -146,7 +146,7 @@ class VIRCADIA_OT_create_entity(Operator):
         bpy.ops.mesh.primitive_plane_add()
 
         obj = bpy.context.active_object
-        obj.name = "Vircadia_Image"
+        obj.name = "Image"
         entity["name"] = "Image"  # Set the name in the entity dictionary
 
         self.set_object_properties(obj, entity)
@@ -157,7 +157,7 @@ class VIRCADIA_OT_create_entity(Operator):
         bpy.ops.object.light_add(type='POINT')
 
         obj = bpy.context.active_object
-        obj.name = "Vircadia_Light"
+        obj.name = "Light"
         entity["name"] = "Light"
 
         self.set_object_properties(obj, entity)
@@ -168,7 +168,7 @@ class VIRCADIA_OT_create_entity(Operator):
         bpy.ops.object.text_add()
 
         obj = bpy.context.active_object
-        obj.name = "Vircadia_Text"
+        obj.name = "Text"
         entity["name"] = "Text"
 
         self.set_object_properties(obj, entity)
@@ -179,18 +179,23 @@ class VIRCADIA_OT_create_entity(Operator):
         bpy.ops.mesh.primitive_plane_add()
 
         obj = bpy.context.active_object
-        obj.name = "Vircadia_Web"
+        obj.name = "Web"
         entity["name"] = "Web"
 
         self.set_object_properties(obj, entity)
         return obj
 
     def create_zone_object(self, entity, context):
+        # Create or get the "Zone" collection and set it as active
+        zone_collection = collection_utils.get_or_create_collection("Zone")
+        layer_collection = context.view_layer.layer_collection.children.get(zone_collection.name)
+        context.view_layer.active_layer_collection = layer_collection
+
         bpy.ops.object.select_all(action='DESELECT')
         bpy.ops.mesh.primitive_cube_add()
 
         obj = context.active_object
-        obj.name = "Vircadia_Zone"
+        obj.name = "Zone"
         entity["name"] = "Zone"
 
         self.set_object_properties(obj, entity)
@@ -220,29 +225,8 @@ class VIRCADIA_OT_create_entity(Operator):
         self.setup_keylight(zone_obj)
 
     def setup_keylight(self, zone_obj):
-        # Check if a keylight already exists
-        existing_keylight = bpy.data.objects.get(f"keyLight_{zone_obj.name}")
-        if existing_keylight:
-            # If it exists, just ensure it's in the correct collection
-            self.move_to_zone_collection(existing_keylight, zone_obj)
-        else:
-            # If it doesn't exist, create a new one
-            world_setup.setup_sun_light(zone_obj)
-            new_keylight = bpy.data.objects.get(f"keyLight_{zone_obj.name}")
-            if new_keylight:
-                self.move_to_zone_collection(new_keylight, zone_obj)
-
-    def move_to_zone_collection(self, obj, zone_obj):
-        zone_collection = zone_obj.users_collection[0]
-        
-        # Remove from all other collections
-        for coll in obj.users_collection:
-            if coll != zone_collection:
-                coll.objects.unlink(obj)
-        
-        # Ensure it's in the zone collection
-        if obj.name not in zone_collection.objects:
-            zone_collection.objects.link(obj)
+        # The active collection is already set to "Zone", so we can create the keylight directly
+        world_setup.setup_sun_light(zone_obj, bpy.context.collection)
 
     def set_object_properties(self, obj, entity):
         # Set position

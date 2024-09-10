@@ -61,17 +61,24 @@ def setup_hdri_and_skybox(zone_obj, json_directory):
     node_env_background.location = (-300, -100)
     node_light_path.location = (-300, 0)
 
-    # Set up the sun light
-    setup_sun_light(zone_obj)
+def setup_sun_light(zone_obj, zone_collection):
+    # Generate a unique name for the keylight
+    base_name = f"keyLight_{zone_obj.name}"
+    unique_name = base_name
+    counter = 1
+    while unique_name in bpy.data.objects:
+        unique_name = f"{base_name}.{counter:03d}"
+        counter += 1
 
-def setup_sun_light(zone_obj):
-    # Create a new sun light
-    sun_light = bpy.data.lights.new(name=f"keyLight_{zone_obj.name}", type='SUN')
-    sun_object = bpy.data.objects.new(name=f"keyLight_{zone_obj.name}", object_data=sun_light)
+    # Create a new sun light with the unique name
+    sun_light = bpy.data.lights.new(name=unique_name, type='SUN')
+    sun_object = bpy.data.objects.new(name=unique_name, object_data=sun_light)
 
-    # Link the sun to the zone collection
-    zone_collection = zone_obj.users_collection[0]
-    zone_collection.objects.link(sun_object)
+    # Use context override to ensure the sun is only added to the zone collection
+    override = bpy.context.copy()
+    override['collection'] = zone_collection
+    with bpy.context.temp_override(**override):
+        bpy.context.collection.objects.link(sun_object)
 
     # Parent the sun to the zone
     sun_object.parent = zone_obj
@@ -95,7 +102,7 @@ def setup_sun_light(zone_obj):
         if prop.startswith("keyLight") and prop not in ["keyLight_color_red", "keyLight_color_green", "keyLight_color_blue", "keyLight_direction_x", "keyLight_direction_y", "keyLight_direction_z", "keyLightMode", "keyLight_intensity"]:
             sun_object[prop] = value
 
-    print(f"Sun light setup complete for {zone_obj.name}")
+    print(f"Sun light setup complete for {zone_obj.name} with unique name {unique_name}")
 
 def update_sun_color(zone_obj, sun_light):
     red = zone_obj.get("keyLight_color_red", 255) / 255

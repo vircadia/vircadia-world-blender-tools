@@ -5,6 +5,7 @@
     "id": "{10000000-0000-0000-0000-000000000000}",
     "type": "Zone",
     "lastEdited": 1000000000000000,
+    "visible": true,
     "parentID": "{00000000-0000-0000-0000-000000000000}",
     "name": "",
     "userData": "{\"environment\":{\"environmentTexture\":\"\"},\"renderingPipeline\":{\"fxaaEnabled\":true,\"glowLayer\":{\"blurKernelSize\":16,\"intensity\":1.5},\"glowLayerEnabled\":true}}",

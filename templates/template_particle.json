@@ -5,6 +5,7 @@
     "id": "{10000000-0000-0000-0000-000000000000}",
     "type": "ParticleEffect",
     "lastEdited": 1000000000000000,
+    "visible": true,
     "name": "",
     "userData": "",
     "href": "",

@@ -1,6 +1,8 @@
 import bpy
+import os
 import logging
 from ..import_export import old_json_exporter, gltf_exporter
+from .. import config
 
 class EXPORT_OT_vircadia_json(bpy.types.Operator):
     bl_idname = "export_scene.vircadia_json"
@@ -9,8 +11,19 @@ class EXPORT_OT_vircadia_json(bpy.types.Operator):
 
     def execute(self, context):
         logging.info("Executing JSON export")
-        old_json_exporter.export_vircadia_json(context, self.filepath)
-        return {'FINISHED'}
+        
+        # Check if content path is set
+        if not context.scene.vircadia_content_path:
+            self.report({'ERROR'}, "Content Path is not set. Please set it in the World Properties panel before exporting.")
+            return {'CANCELLED'}
+        
+        try:
+            old_json_exporter.export_vircadia_json(context, self.filepath)
+            self.report({'INFO'}, f"Vircadia JSON exported successfully to {self.filepath}")
+            return {'FINISHED'}
+        except Exception as e:
+            self.report({'ERROR'}, f"Error exporting JSON: {str(e)}")
+            return {'CANCELLED'}
 
     def invoke(self, context, event):
         logging.info("Invoking JSON export")
@@ -24,11 +37,17 @@ class EXPORT_OT_vircadia_glb(bpy.types.Operator):
 
     def execute(self, context):
         logging.info("Executing GLB export")
-        gltf_exporter.export_glb(context, self.filepath)
-        return {'FINISHED'}
+        success = gltf_exporter.export_glb(context, self.filepath)
+        if success:
+            self.report({'INFO'}, f"GLB exported successfully to {self.filepath}")
+            return {'FINISHED'}
+        else:
+            self.report({'ERROR'}, "Failed to export GLB")
+            return {'CANCELLED'}
 
     def invoke(self, context, event):
         logging.info("Invoking GLB export")
+        self.filepath = os.path.join(os.path.dirname(self.filepath), config.DEFAULT_GLB_EXPORT_FILENAME)
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 

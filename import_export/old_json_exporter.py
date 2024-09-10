@@ -6,6 +6,12 @@ from urllib.parse import urljoin
 from .. import config
 from ..utils import coordinate_utils, property_utils, visibility_utils
 
+class VircadiaJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, float):
+            return f"{obj:.16f}"
+        return super().default(obj)
+
 def generate_random_uuid():
     return str(uuid.uuid4())
 
@@ -14,7 +20,6 @@ def replace_placeholder_uuid(data):
         for key, value in data.items():
             if isinstance(value, str) and value == "{10000000-0000-0000-0000-000000000000}":
                 new_uuid = generate_random_uuid()
-                print(f"Replacing UUID: {value} with {new_uuid}")
                 data[key] = "{" + new_uuid + "}"
             elif isinstance(value, (dict, list)):
                 replace_placeholder_uuid(value)
@@ -22,90 +27,100 @@ def replace_placeholder_uuid(data):
         for i, item in enumerate(data):
             if isinstance(item, str) and item == "{10000000-0000-0000-0000-000000000000}":
                 new_uuid = generate_random_uuid()
-                print(f"Replacing UUID in list: {item} with {new_uuid}")
                 data[i] = "{" + new_uuid + "}"
             elif isinstance(item, (dict, list)):
                 replace_placeholder_uuid(item)
 
+def update_template_properties(template, custom_props):
+    for key, value in template.items():
+        if isinstance(value, dict):
+            update_template_properties(value, custom_props)
+        else:
+            prop_key = f"{key}"
+            if prop_key in custom_props:
+                if "Mode" in prop_key and prop_key.lower() != "model":
+                    template[key] = "enabled" if custom_props[prop_key] else "disabled"
+                else:
+                    template[key] = custom_props[prop_key]
+            else:
+                for custom_key in custom_props:
+                    if custom_key.endswith(f"_{key}"):
+                        if "Mode" in custom_key and custom_key.lower() != "model":
+                            template[key] = "enabled" if custom_props[custom_key] else "disabled"
+                        else:
+                            template[key] = custom_props[custom_key]
+                        break
+
 def get_vircadia_entity_data(obj, content_path):
-    entity_data = {}
-
     entity_type = obj.get("type", "Entity")
+    
+    # Load the appropriate template
+    template = load_entity_template(entity_type.lower())
+    entity_data = template["Entities"][0]
+
+    # Update basic properties
+    entity_data["id"] = "{" + generate_random_uuid() + "}"
     entity_data["type"] = entity_type
+    entity_data["name"] = obj.get("name", "")
 
-    blender_pos = obj.location
-    vircadia_pos = coordinate_utils.blender_to_vircadia_coordinates(*blender_pos)
-    entity_data["position"] = {"x": vircadia_pos[0], "y": vircadia_pos[1], "z": vircadia_pos[2]}
-
-    blender_scale = obj.scale
-    vircadia_scale = coordinate_utils.blender_to_vircadia_coordinates(*blender_scale)
-    entity_data["dimensions"] = {"x": vircadia_scale[0], "y": vircadia_scale[1], "z": vircadia_scale[2]}
-
-    if obj.rotation_mode == 'QUATERNION':
-        blender_rot = obj.rotation_quaternion
-    else:
-        blender_rot = obj.rotation_euler.to_quaternion()
-    vircadia_rot = coordinate_utils.blender_to_vircadia_rotation(*blender_rot)
-    entity_data["rotation"] = {"x": vircadia_rot[0], "y": vircadia_rot[1], "z": vircadia_rot[2], "w": vircadia_rot[3]}
-
-    custom_props = property_utils.get_custom_properties(obj)
-    entity_data.update(reconstruct_entity_properties(custom_props, entity_type))
-
+    # Convert coordinates for Zone entities
     if entity_type.lower() == "zone":
-        entity_data["userData"] = construct_zone_user_data(obj)
+        entity_data["position"] = coordinate_utils.blender_to_vircadia_coordinates(*obj.location)
+        entity_data["dimensions"] = coordinate_utils.blender_to_vircadia_dimensions(*obj.scale)
+        entity_data["rotation"] = coordinate_utils.blender_to_vircadia_rotation(*obj.rotation_quaternion)
+    else:
+        entity_data["position"] = {
+            "x": obj.location.x,
+            "y": obj.location.y,
+            "z": obj.location.z
+        }
+        entity_data["dimensions"] = {
+            "x": obj.scale.x,
+            "y": obj.scale.y,
+            "z": obj.scale.z
+        }
+        entity_data["rotation"] = {
+            "x": obj.rotation_quaternion.x,
+            "y": obj.rotation_quaternion.y,
+            "z": obj.rotation_quaternion.z,
+            "w": obj.rotation_quaternion.w
+        }
+
+    # Get all custom properties
+    custom_props = property_utils.get_custom_properties(obj)
+
+    # Update template properties with custom properties
+    update_template_properties(entity_data, custom_props)
+
+    # Special handling for zone entities
+    if entity_type.lower() == "zone":
+        # Get the skybox URL from the scene properties
+        skybox_url = bpy.context.scene.vircadia_skybox_texture
+        if skybox_url:
+            # Ensure the skybox property exists in entity_data
+            if "skybox" not in entity_data:
+                entity_data["skybox"] = {}
+            entity_data["skybox"]["url"] = urljoin(content_path, os.path.basename(skybox_url))
+
+        # Handle userData and renderingPipeline properties
+        user_data = {}
+        rendering_pipeline = {}
+
+        for key, value in custom_props.items():
+            if key.startswith("renderingPipeline_"):
+                rendering_pipeline[key.replace("renderingPipeline_", "")] = value
+            elif key == "environment_environmentTexture":
+                if "environment" not in user_data:
+                    user_data["environment"] = {}
+                user_data["environment"]["environmentTexture"] = urljoin(content_path, os.path.basename(value))
+
+        if rendering_pipeline:
+            user_data["renderingPipeline"] = rendering_pipeline
+
+        if user_data:
+            entity_data["userData"] = json.dumps(user_data)
 
     return entity_data
-
-def reconstruct_entity_properties(props, entity_type):
-    reconstructed = {}
-    for key, value in props.items():
-        if key in ["position", "dimensions", "rotation", "type"]:
-            continue  # These are handled separately
-
-        parts = key.split('_')
-        current = reconstructed
-        for i, part in enumerate(parts[:-1]):
-            if part not in current:
-                current[part] = {}
-            current = current[part]
-        
-        final_key = parts[-1]
-        if final_key in ['red', 'green', 'blue']:
-            if 'color' not in current:
-                current['color'] = {}
-            current['color'][final_key] = value
-        elif final_key in ['x', 'y', 'z', 'w']:
-            if 'direction' not in current:
-                current['direction'] = {}
-            current['direction'][final_key] = value
-        elif final_key.lower().endswith('mode') and final_key.lower() != 'model':
-            current[final_key] = "enabled" if value else "disabled"
-        else:
-            current[final_key] = value
-
-    # Handle specific entity type structures
-    if entity_type.lower() == "zone":
-        for mode in ["keyLightMode", "ambientLightMode", "skyboxMode", "hazeMode", "bloomMode"]:
-            if mode not in reconstructed:
-                reconstructed[mode] = "enabled" if reconstructed.get(mode.replace("Mode", "")) else "disabled"
-
-    return reconstructed
-
-def construct_zone_user_data(obj):
-    user_data = {
-        "renderingPipeline": {
-            "fxaaEnabled": obj.get("renderingPipeline_fxaaEnabled", True),
-            "glowLayerEnabled": obj.get("renderingPipeline_glowLayerEnabled", True),
-            "glowLayer": {
-                "blurKernelSize": obj.get("renderingPipeline_glowLayer_blurKernelSize", 16),
-                "intensity": obj.get("renderingPipeline_glowLayer_intensity", 1.5)
-            }
-        },
-        "environment": {
-            "environmentTexture": obj.get("environment_environmentTexture", "")
-        }
-    }
-    return json.dumps(user_data)
 
 def load_entity_template(entity_type):
     addon_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
@@ -131,6 +146,13 @@ def load_entity_template(entity_type):
         # Provide a basic generic template as fallback
         return {"Entities": [{"type": entity_type}]}
 
+def has_model_entities():
+    return any(obj.get("type", "").lower() == "model" for obj in bpy.data.objects)
+
+def has_collision_objects():
+    collision_keywords = ["collider", "collision", "collides", "colliders", "collisions"]
+    return any(any(keyword in obj.name.lower() for keyword in collision_keywords) for obj in bpy.data.objects)
+
 def export_vircadia_json(context, filepath):
     scene = context.scene
     content_path = scene.vircadia_content_path
@@ -143,15 +165,6 @@ def export_vircadia_json(context, filepath):
 
     scene_data = {"Entities": []}
 
-    # Add the Model entity from the template
-    model_template = load_entity_template("model")
-    model_entity = model_template["Entities"][0]
-    print("Before UUID replacement in model entity:", json.dumps(model_entity, indent=2))
-    replace_placeholder_uuid(model_entity)
-    print("After UUID replacement in model entity:", json.dumps(model_entity, indent=2))
-    model_entity["modelURL"] = urljoin(content_path, config.DEFAULT_GLB_EXPORT_FILENAME)
-    scene_data["Entities"].append(model_entity)
-
     hidden_objects = visibility_utils.temporarily_unhide_objects(context)
 
     try:
@@ -160,26 +173,34 @@ def export_vircadia_json(context, filepath):
                 entity_type = obj["type"].lower()
                 if entity_type not in ["light", "model"]:
                     entity_data = get_vircadia_entity_data(obj, content_path)
-                    
-                    # Merge with template
-                    template = load_entity_template(entity_type)
-                    template_entity = template["Entities"][0]
-                    merged_entity = {**template_entity, **entity_data}
-                    
-                    print(f"Before UUID replacement for {entity_type}:", json.dumps(merged_entity, indent=2))
-                    replace_placeholder_uuid(merged_entity)
-                    print(f"After UUID replacement for {entity_type}:", json.dumps(merged_entity, indent=2))
-                    
-                    scene_data["Entities"].append(merged_entity)
+                    scene_data["Entities"].append(entity_data)
 
-        print("Before final UUID replacement in scene data:", json.dumps(scene_data, indent=2))
+        # Check if there are any Model entities in the Blender scene
+        if has_model_entities():
+            # Add the Model entity from the template
+            model_template = load_entity_template("model")
+            model_entity = model_template["Entities"][0]
+            replace_placeholder_uuid(model_entity)
+            model_entity["modelURL"] = urljoin(content_path, config.DEFAULT_GLB_EXPORT_FILENAME)
+            scene_data["Entities"].append(model_entity)
+
+        # Check if we need to add a collision model
+        if has_collision_objects():
+            collision_model_template = load_entity_template("model")
+            collision_model_entity = collision_model_template["Entities"][0]
+            replace_placeholder_uuid(collision_model_entity)
+            collision_model_entity["modelURL"] = urljoin(content_path, config.DEFAULT_GLB_EXPORT_FILENAME.replace('.glb', '_collisions.glb'))
+            collision_model_entity["collisionless"] = False
+            collision_model_entity["ignoreForCollisions"] = False
+            collision_model_entity["visible"] = False
+            scene_data["Entities"].append(collision_model_entity)
+
         replace_placeholder_uuid(scene_data)
-        print("After final UUID replacement in scene data:", json.dumps(scene_data, indent=2))
 
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
 
         with open(filepath, 'w') as f:
-            json.dump(scene_data, f, indent=2)
+            json.dump(scene_data, f, cls=VircadiaJSONEncoder, indent=4)
 
         print(f"Vircadia JSON exported successfully to {filepath}")
     finally:

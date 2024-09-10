@@ -16,7 +16,7 @@ def load_json(file_path):
     return None
 
 def import_entities(data, json_directory):
-    zone_obj = None
+    zone_objs = []
     for entity in data.get("Entities", []):
         # Ensure "type" has only the first letter capitalized
         if "type" in entity:
@@ -30,17 +30,24 @@ def import_entities(data, json_directory):
         if obj is not None:
             # Special handling for zone objects
             if entity.get("type") == "Zone":
-                obj["name"] = "Zone"
-                zone_obj = obj
+                base_name = "Zone"
+                unique_name = base_name
+                counter = 1
+                while unique_name in bpy.data.objects:
+                    unique_name = f"{base_name}.{counter:03d}"
+                    counter += 1
+                obj.name = unique_name
+                obj["name"] = unique_name
+                zone_objs.append(obj)
                 # Set display type to wireframe for zones
                 obj.display_type = 'WIRE'
             
             # Set custom properties
             property_utils.set_custom_properties(obj, entity)
             
-            # Additional check to ensure zone objects always have "Zone" as their name custom property
+            # Additional check to ensure zone objects always have their unique name as their name custom property
             if obj.get("type") == "Zone":
-                obj["name"] = "Zone"
+                obj["name"] = obj.name
 
             # Move the object to the appropriate collection
             move_to_type_collection(obj, entity.get("type", "Unknown"))
@@ -50,7 +57,7 @@ def import_entities(data, json_directory):
 
         else:
             error_handling.log_import_error(entity)
-    return zone_obj
+    return zone_objs
 
 def move_to_type_collection(obj, entity_type):
     # Get or create the collection for this entity type
@@ -69,11 +76,15 @@ def process_vircadia_json(file_path):
         return
 
     json_directory = os.path.dirname(os.path.normpath(file_path))
-    zone_obj = import_entities(data, json_directory)
+    zone_objs = import_entities(data, json_directory)
 
-    if zone_obj:
+    for zone_obj in zone_objs:
         world_setup.setup_hdri_and_skybox(zone_obj, json_directory)
-    else:
+        # Create a new collection for each zone
+        zone_collection = collection_utils.get_or_create_collection(f"Zone_{zone_obj.name}")
+        world_setup.setup_sun_light(zone_obj, zone_collection)
+
+    if not zone_objs:
         error_handling.log_warning("No zone entity found in the imported data.")
 
     world_setup.configure_world_and_viewport()
