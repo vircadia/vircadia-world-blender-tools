@@ -163,7 +163,12 @@ def export_vircadia_json(context, filepath):
     if not content_path.endswith('/'):
         content_path += '/'
 
-    scene_data = {"Entities": []}
+    scene_data = {
+        "DataVersion": 0,
+        "Entities": [],
+        "Id": "{" + generate_random_uuid() + "}",
+        "Version": 133
+    }
 
     hidden_objects = visibility_utils.temporarily_unhide_objects(context)
 

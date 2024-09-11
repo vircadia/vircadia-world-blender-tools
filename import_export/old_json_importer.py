@@ -50,7 +50,7 @@ def import_entities(data, json_directory):
                 obj["name"] = obj.name
 
             # Move the object to the appropriate collection
-            move_to_type_collection(obj, entity.get("type", "Unknown"))
+            zone_collection = move_to_type_collection(obj, entity.get("type", "Unknown"))
             
             # Add transform update handler
             bpy.app.handlers.depsgraph_update_post.append(object_creation.create_transform_update_handler(obj))
@@ -69,6 +69,8 @@ def move_to_type_collection(obj, entity_type):
     
     # Link the object to the type-specific collection
     collection.objects.link(obj)
+    
+    return collection
 
 def process_vircadia_json(file_path):
     data = load_json(file_path)
@@ -80,8 +82,8 @@ def process_vircadia_json(file_path):
 
     for zone_obj in zone_objs:
         world_setup.setup_hdri_and_skybox(zone_obj, json_directory)
-        # Create a new collection for each zone
-        zone_collection = collection_utils.get_or_create_collection(f"Zone_{zone_obj.name}")
+        # Get the zone collection
+        zone_collection = zone_obj.users_collection[0]
         world_setup.setup_sun_light(zone_obj, zone_collection)
 
     if not zone_objs:

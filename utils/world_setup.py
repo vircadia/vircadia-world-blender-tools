@@ -74,11 +74,8 @@ def setup_sun_light(zone_obj, zone_collection):
     sun_light = bpy.data.lights.new(name=unique_name, type='SUN')
     sun_object = bpy.data.objects.new(name=unique_name, object_data=sun_light)
 
-    # Use context override to ensure the sun is only added to the zone collection
-    override = bpy.context.copy()
-    override['collection'] = zone_collection
-    with bpy.context.temp_override(**override):
-        bpy.context.collection.objects.link(sun_object)
+    # Link the sun object to the zone collection
+    zone_collection.objects.link(sun_object)
 
     # Parent the sun to the zone
     sun_object.parent = zone_obj

@@ -69,10 +69,12 @@ def export_glb(context, filepath):
     # Store original visibility states
     original_lod_state = context.scene.vircadia_hide_lod_levels
     original_collision_state = context.scene.vircadia_hide_collisions
+    original_armature_state = context.scene.vircadia_hide_armatures
 
     # Unhide all objects
     context.scene.vircadia_hide_lod_levels = False
     context.scene.vircadia_hide_collisions = False
+    context.scene.vircadia_hide_armatures = False
     visibility_utils.update_visibility(context.scene, context)
 
     hidden_objects = visibility_utils.temporarily_unhide_objects(context)
@@ -107,6 +109,7 @@ def export_glb(context, filepath):
         # Restore original visibility states
         context.scene.vircadia_hide_lod_levels = original_lod_state
         context.scene.vircadia_hide_collisions = original_collision_state
+        context.scene.vircadia_hide_armatures = original_armature_state
         visibility_utils.update_visibility(context.scene, context)
         visibility_utils.restore_hidden_objects(hidden_objects)
         print("Restored original visibility states")
