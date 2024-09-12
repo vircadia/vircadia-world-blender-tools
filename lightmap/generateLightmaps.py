@@ -1,15 +1,6 @@
 import bpy
 import bmesh
 from collections import defaultdict
-from .lightmap_utils import (
-    COLOR_SPACE,
-    RESOLUTION_SINGLE,
-    RESOLUTION_SMALL_GROUP,
-    RESOLUTION_LARGE_GROUP,
-    SMALL_GROUP_THRESHOLD,
-    LARGE_GROUP_THRESHOLD,
-    setup_bake_settings
-)
 
 # Dictionary to store created image texture nodes
 created_nodes = {}
@@ -17,10 +8,20 @@ created_nodes = {}
 # Dictionary to store objects sharing the same material
 material_to_objects = defaultdict(list)
 
+# Dictionary to store original UV states
+original_uv_states = {}
+
 def make_single_user(obj):
     if obj.data.users > 1:
         new_mesh = obj.data.copy()
         obj.data = new_mesh
+
+def store_original_uv_state(obj):
+    mesh = obj.data
+    original_uv_states[obj.name] = {
+        "active": mesh.uv_layers.active.name if mesh.uv_layers.active else None,
+        "render": next((uv.name for uv in mesh.uv_layers if uv.active_render), None)
+    }
 
 def ensure_uv_maps(obj):
     mesh = obj.data
@@ -60,12 +61,23 @@ def ensure_uv_maps(obj):
     
     return lightmap_uv
 
+def restore_original_uv_states():
+    for obj_name, uv_state in original_uv_states.items():
+        obj = bpy.data.objects.get(obj_name)
+        if obj and obj.type == 'MESH':
+            mesh = obj.data
+            if uv_state["active"] and uv_state["active"] in mesh.uv_layers:
+                mesh.uv_layers.active = mesh.uv_layers[uv_state["active"]]
+            if uv_state["render"] and uv_state["render"] in mesh.uv_layers:
+                for uv in mesh.uv_layers:
+                    uv.active_render = (uv.name == uv_state["render"])
+
 def deselect_all_nodes(nodes):
     for node in nodes:
         node.select = False
     nodes.active = None
 
-def find_or_create_image_texture(mat, obj_name, resolution):
+def find_or_create_image_texture(mat, obj_name, resolution, color_space):
     global created_nodes
     nodes = mat.node_tree.nodes
 
@@ -94,7 +106,7 @@ def find_or_create_image_texture(mat, obj_name, resolution):
     # Create new image
     image_name = f"Lightmap_{mat.name}"
     image = bpy.data.images.new(name=image_name, width=resolution, height=resolution)
-    image.colorspace_settings.name = COLOR_SPACE
+    image.colorspace_settings.name = color_space
     
     image_node.image = image
 
@@ -107,9 +119,12 @@ def find_or_create_image_texture(mat, obj_name, resolution):
 
     return image_node
 
-def process_object(obj, material_usage):
+def process_object(obj, material_usage, lightmap_settings):
     if obj.type != 'MESH' or obj.data is None:
         return
+
+    # Store original UV state before any modifications
+    store_original_uv_state(obj)
 
     make_single_user(obj)
 
@@ -124,14 +139,14 @@ def process_object(obj, material_usage):
         mat = mat_slot.material
         obj_count = material_usage.get(mat.name, 0)
 
-        if obj_count < SMALL_GROUP_THRESHOLD:
-            resolution = RESOLUTION_SINGLE
-        elif obj_count < LARGE_GROUP_THRESHOLD:
-            resolution = RESOLUTION_SMALL_GROUP
+        if obj_count < lightmap_settings['small_threshold']:
+            resolution = lightmap_settings['resolution_single']
+        elif obj_count < lightmap_settings['large_threshold']:
+            resolution = lightmap_settings['resolution_small']
         else:
-            resolution = RESOLUTION_LARGE_GROUP
+            resolution = lightmap_settings['resolution_large']
 
-        find_or_create_image_texture(mat, obj.name, resolution)
+        find_or_create_image_texture(mat, obj.name, resolution, lightmap_settings['color_space'])
 
         # Add object to the list of objects sharing this material
         material_to_objects[mat.name].append(obj)
@@ -161,7 +176,7 @@ def unwrap_objects(objects):
     bpy.ops.object.mode_set(mode='OBJECT')
     bpy.ops.object.select_all(action='DESELECT')
 
-def bake_objects(objects):
+def bake_objects(objects, bake_settings):
     # Select objects for baking
     bpy.ops.object.select_all(action='DESELECT')
     for obj in objects:
@@ -171,43 +186,95 @@ def bake_objects(objects):
     # Ensure we're in object mode
     bpy.ops.object.mode_set(mode='OBJECT')
 
+    scene = bpy.context.scene
+
+    print("Blender bake settings before applying custom settings:")
+    print(f"  bake_type: {scene.cycles.bake_type}")
+    print(f"  use_pass_direct: {scene.render.bake.use_pass_direct}")
+    print(f"  use_pass_indirect: {scene.render.bake.use_pass_indirect}")
+    print(f"  use_pass_color: {scene.render.bake.use_pass_color}")
+    print(f"  use_clear: {scene.render.bake.use_clear}")
+    print(f"  use_adaptive_sampling: {scene.cycles.use_adaptive_sampling}")
+    print(f"  adaptive_threshold: {scene.cycles.adaptive_threshold}")
+    print(f"  samples: {scene.cycles.samples}")
+    print(f"  adaptive_min_samples: {scene.cycles.adaptive_min_samples}")
+    print(f"  use_denoising: {scene.cycles.use_denoising}")
+    print(f"  denoiser: {scene.cycles.denoiser}")
+    print(f"  denoising_input_passes: {scene.cycles.denoising_input_passes}")
+
+    # Set up bake settings
+    scene.cycles.bake_type = bake_settings['bake_type']
+    scene.render.bake.use_pass_direct = bake_settings['use_pass_direct']
+    scene.render.bake.use_pass_indirect = bake_settings['use_pass_indirect']
+    scene.render.bake.use_pass_color = bake_settings['use_pass_color']
+    scene.render.bake.use_clear = bake_settings['use_clear']
+    scene.cycles.use_adaptive_sampling = bake_settings['use_adaptive_sampling']
+    scene.cycles.adaptive_threshold = bake_settings['adaptive_threshold']
+    scene.cycles.samples = bake_settings['samples']
+    scene.cycles.adaptive_min_samples = bake_settings['adaptive_min_samples']
+    scene.cycles.use_denoising = bake_settings['use_denoising']
+    scene.cycles.denoiser = bake_settings['denoiser']
+    scene.cycles.denoising_input_passes = bake_settings['denoising_input_passes']
+
+    print("Blender bake settings after applying custom settings:")
+    print(f"  bake_type: {scene.cycles.bake_type}")
+    print(f"  use_pass_direct: {scene.render.bake.use_pass_direct}")
+    print(f"  use_pass_indirect: {scene.render.bake.use_pass_indirect}")
+    print(f"  use_pass_color: {scene.render.bake.use_pass_color}")
+    print(f"  use_clear: {scene.render.bake.use_clear}")
+    print(f"  use_adaptive_sampling: {scene.cycles.use_adaptive_sampling}")
+    print(f"  adaptive_threshold: {scene.cycles.adaptive_threshold}")
+    print(f"  samples: {scene.cycles.samples}")
+    print(f"  adaptive_min_samples: {scene.cycles.adaptive_min_samples}")
+    print(f"  use_denoising: {scene.cycles.use_denoising}")
+    print(f"  denoiser: {scene.cycles.denoiser}")
+    print(f"  denoising_input_passes: {scene.cycles.denoising_input_passes}")
+
     # Perform baking
     bpy.ops.object.bake(type='DIFFUSE', pass_filter={'DIRECT', 'INDIRECT'})
 
     # Deselect objects after baking
     bpy.ops.object.select_all(action='DESELECT')
 
-def process_and_bake_group(material_name, objects):
+def process_and_bake_group(material_name, objects, bake_settings):
     print(f"Processing and baking group for material: {material_name}")
     unwrap_objects(objects)
-    bake_objects(objects)
+    bake_objects(objects, bake_settings)
     print(f"Completed processing and baking for material: {material_name}")
 
-def generate_lightmaps():
-    global created_nodes, material_to_objects
+def generate_lightmaps(objects, lightmap_settings, bake_settings):
+    global created_nodes, material_to_objects, original_uv_states
     created_nodes = {}
     material_to_objects = defaultdict(list)
-
-    # Set up bake settings
-    setup_bake_settings()
+    original_uv_states = {}
 
     # Count material usage
     material_usage = {}
-    for obj in bpy.context.selected_objects:
+    for obj in objects:
         if obj.type == 'MESH' and obj.data is not None:
             for mat_slot in obj.material_slots:
                 if mat_slot.material:
                     material_usage[mat_slot.material.name] = material_usage.get(mat_slot.material.name, 0) + 1
 
     # Process objects
-    for obj in bpy.context.selected_objects:
-        process_object(obj, material_usage)
+    for obj in objects:
+        process_object(obj, material_usage, lightmap_settings)
 
     # Unwrap and bake objects sharing the same material
-    for material_name, objects in material_to_objects.items():
-        process_and_bake_group(material_name, objects)
+    for material_name, material_objects in material_to_objects.items():
+        process_and_bake_group(material_name, material_objects, bake_settings)
 
-    print("Lightmap generation and baking completed.")
+    # Restore original UV states
+    restore_original_uv_states()
+
+    print("Lightmap generation and baking completed. Original UV states restored.")
 
 if __name__ == "__main__":
-    generate_lightmaps()
+    # This part is for testing purposes only
+    # In actual use, the generate_lightmaps function will be called from lightmap_operators.py
+    from .lightmap_utils import get_lightmap_settings, get_bake_settings
+    scene = bpy.context.scene
+    visible_selected_objects = [obj for obj in bpy.context.selected_objects if obj.type == 'MESH' and not obj.hide_get()]
+    lightmap_settings = get_lightmap_settings(scene)
+    bake_settings = get_bake_settings(scene)
+    generate_lightmaps(visible_selected_objects, lightmap_settings, bake_settings)

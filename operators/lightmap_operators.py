@@ -1,6 +1,6 @@
 import bpy
 from bpy.types import Operator
-from ..lightmap import generate_lightmaps, lightmap_utils
+from ..lightmap import generateLightmaps, lightmap_utils
 
 class VIRCADIA_OT_generate_lightmaps(Operator):
     bl_idname = "vircadia.generate_lightmaps"
@@ -12,28 +12,25 @@ class VIRCADIA_OT_generate_lightmaps(Operator):
         scene = context.scene
 
         # Update lightmap configuration
-        lightmap_utils.COLOR_SPACE = scene.vircadia_lightmap_color_space
-        lightmap_utils.RESOLUTION_SINGLE = scene.vircadia_lightmap_resolution_single
-        lightmap_utils.RESOLUTION_SMALL_GROUP = scene.vircadia_lightmap_resolution_small
-        lightmap_utils.RESOLUTION_LARGE_GROUP = scene.vircadia_lightmap_resolution_large
-        lightmap_utils.SMALL_GROUP_THRESHOLD = scene.vircadia_lightmap_small_threshold
-        lightmap_utils.LARGE_GROUP_THRESHOLD = scene.vircadia_lightmap_large_threshold
+        lightmap_settings = lightmap_utils.get_lightmap_settings(scene)
+        bake_settings = lightmap_utils.get_bake_settings(scene)
 
-        # Update bake settings
-        bake_settings = {}
-        for setting in lightmap_utils.BAKE_SETTINGS_WHITELIST:
-            bake_settings[setting] = getattr(scene, f"vircadia_lightmap_{setting}")
-        lightmap_utils.apply_bake_settings(bake_settings)
+        # Get visible selected objects
+        visible_selected_objects = [obj for obj in context.selected_objects if obj.type == 'MESH' and not obj.hide_get()]
+
+        if not visible_selected_objects:
+            self.report({'WARNING'}, "No visible mesh objects selected. Please select at least one visible mesh object.")
+            return {'CANCELLED'}
 
         # Generate lightmaps
-        generate_lightmaps()
+        generateLightmaps.generate_lightmaps(visible_selected_objects, lightmap_settings, bake_settings)
 
         self.report({'INFO'}, "Lightmap generation completed")
         return {'FINISHED'}
 
     @classmethod
     def poll(cls, context):
-        return len(context.selected_objects) > 0
+        return any(obj.type == 'MESH' and not obj.hide_get() for obj in context.selected_objects)
 
 def register():
     bpy.utils.register_class(VIRCADIA_OT_generate_lightmaps)

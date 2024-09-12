@@ -32,9 +32,24 @@ class VIRCADIA_PT_lightmap_panel(Panel):
         # Bake settings
         box = layout.box()
         box.label(text="Bake Settings")
-        for setting in lightmap_utils.BAKE_SETTINGS_WHITELIST:
-            if hasattr(scene, f"vircadia_lightmap_{setting}"):
-                box.prop(scene, f"vircadia_lightmap_{setting}", text=setting.replace('_', ' ').title())
+        box.prop(scene, "vircadia_lightmap_bake_type", text="Bake Type")
+        box.prop(scene, "vircadia_lightmap_use_pass_direct", text="Use Direct")
+        box.prop(scene, "vircadia_lightmap_use_pass_indirect", text="Use Indirect")
+        box.prop(scene, "vircadia_lightmap_use_pass_color", text="Use Color")
+        box.prop(scene, "vircadia_lightmap_use_clear", text="Clear")
+        box.prop(scene, "vircadia_lightmap_use_adaptive_sampling", text="Adaptive Sampling")
+        box.prop(scene, "vircadia_lightmap_adaptive_threshold", text="Adaptive Threshold")
+        box.prop(scene, "vircadia_lightmap_samples", text="Samples")
+        box.prop(scene, "vircadia_lightmap_adaptive_min_samples", text="Min Samples")
+        box.prop(scene, "vircadia_lightmap_use_denoising", text="Use Denoising")
+        box.prop(scene, "vircadia_lightmap_denoiser", text="Denoiser")
+        
+        if scene.vircadia_lightmap_denoiser == 'OPTIX':
+            box.prop(scene, "vircadia_lightmap_denoising_input_passes", text="Passes")
+        elif scene.vircadia_lightmap_denoiser == 'OPENIMAGEDENOISE':
+            box.prop(scene, "vircadia_lightmap_denoising_input_passes", text="Passes")
+            box.prop(scene, "vircadia_lightmap_denoising_prefilter", text="Prefilter")
+            box.prop(scene, "vircadia_lightmap_denoising_quality", text="Quality")
 
         # Generate lightmaps button
         layout.operator("vircadia.generate_lightmaps", text="Generate Lightmaps")
@@ -42,35 +57,35 @@ class VIRCADIA_PT_lightmap_panel(Panel):
 def register():
     bpy.types.Scene.vircadia_lightmap_color_space = bpy.props.StringProperty(
         name="Color Space",
-        default=lightmap_utils.COLOR_SPACE
+        default="sRGB"
     )
     bpy.types.Scene.vircadia_lightmap_resolution_single = bpy.props.IntProperty(
         name="Single Resolution",
-        default=lightmap_utils.RESOLUTION_SINGLE,
+        default=1024,
         min=64,
         max=8192
     )
     bpy.types.Scene.vircadia_lightmap_resolution_small = bpy.props.IntProperty(
         name="Small Group Resolution",
-        default=lightmap_utils.RESOLUTION_SMALL_GROUP,
+        default=2048,
         min=64,
         max=8192
     )
     bpy.types.Scene.vircadia_lightmap_resolution_large = bpy.props.IntProperty(
         name="Large Group Resolution",
-        default=lightmap_utils.RESOLUTION_LARGE_GROUP,
+        default=4096,
         min=64,
         max=8192
     )
     bpy.types.Scene.vircadia_lightmap_small_threshold = bpy.props.IntProperty(
         name="Small Group Threshold",
-        default=lightmap_utils.SMALL_GROUP_THRESHOLD,
+        default=2,
         min=1,
         max=100
     )
     bpy.types.Scene.vircadia_lightmap_large_threshold = bpy.props.IntProperty(
         name="Large Group Threshold",
-        default=lightmap_utils.LARGE_GROUP_THRESHOLD,
+        default=7,
         min=1,
         max=100
     )
@@ -103,7 +118,7 @@ def register():
     )
     bpy.types.Scene.vircadia_lightmap_adaptive_threshold = bpy.props.FloatProperty(
         name="Adaptive Threshold",
-        default=0.2,
+        default=0.01,
         min=0,
         max=1
     )
@@ -114,8 +129,8 @@ def register():
     )
     bpy.types.Scene.vircadia_lightmap_adaptive_min_samples = bpy.props.IntProperty(
         name="Min Samples",
-        default=256,
-        min=1
+        default=0,
+        min=0
     )
     bpy.types.Scene.vircadia_lightmap_use_denoising = bpy.props.BoolProperty(
         name="Use Denoising",
@@ -123,13 +138,37 @@ def register():
     )
     bpy.types.Scene.vircadia_lightmap_denoiser = bpy.props.EnumProperty(
         name="Denoiser",
-        items=[('OPTIX', 'OptiX', 'Use OptiX denoiser')],
+        items=[
+            ('OPTIX', 'OptiX', 'Use OptiX denoiser'),
+            ('OPENIMAGEDENOISE', 'OpenImageDenoise', 'Use OpenImageDenoise denoiser')
+        ],
         default='OPTIX'
     )
     bpy.types.Scene.vircadia_lightmap_denoising_input_passes = bpy.props.EnumProperty(
         name="Denoising Passes",
-        items=[('RGB_ALBEDO', 'RGB Albedo', 'Use RGB and Albedo passes for denoising')],
+        items=[
+            ('RGB_ALBEDO', 'Albedo', 'Use Albedo pass for denoising'),
+            ('RGB_ALBEDO_NORMAL', 'Albedo and Normal', 'Use Albedo and Normal passes for denoising')
+        ],
         default='RGB_ALBEDO'
+    )
+    bpy.types.Scene.vircadia_lightmap_denoising_prefilter = bpy.props.EnumProperty(
+        name="Denoising Prefilter",
+        items=[
+            ('ACCURATE', 'Accurate', 'Use accurate prefilter'),
+            ('FAST', 'Fast', 'Use fast prefilter'),
+            ('NONE', 'None', 'No prefilter')
+        ],
+        default='ACCURATE'
+    )
+    bpy.types.Scene.vircadia_lightmap_denoising_quality = bpy.props.EnumProperty(
+        name="Denoising Quality",
+        items=[
+            ('HIGH', 'High', 'High quality denoising'),
+            ('BALANCED', 'Balanced', 'Balanced quality denoising'),
+            ('FAST', 'Fast', 'Fast denoising')
+        ],
+        default='HIGH'
     )
 
     bpy.utils.register_class(VIRCADIA_PT_lightmap_panel)
@@ -145,8 +184,20 @@ def unregister():
     del bpy.types.Scene.vircadia_lightmap_large_threshold
 
     # Unregister properties for bake settings
-    for setting in lightmap_utils.BAKE_SETTINGS_WHITELIST:
-        delattr(bpy.types.Scene, f"vircadia_lightmap_{setting}")
+    del bpy.types.Scene.vircadia_lightmap_bake_type
+    del bpy.types.Scene.vircadia_lightmap_use_pass_direct
+    del bpy.types.Scene.vircadia_lightmap_use_pass_indirect
+    del bpy.types.Scene.vircadia_lightmap_use_pass_color
+    del bpy.types.Scene.vircadia_lightmap_use_clear
+    del bpy.types.Scene.vircadia_lightmap_use_adaptive_sampling
+    del bpy.types.Scene.vircadia_lightmap_adaptive_threshold
+    del bpy.types.Scene.vircadia_lightmap_samples
+    del bpy.types.Scene.vircadia_lightmap_adaptive_min_samples
+    del bpy.types.Scene.vircadia_lightmap_use_denoising
+    del bpy.types.Scene.vircadia_lightmap_denoiser
+    del bpy.types.Scene.vircadia_lightmap_denoising_input_passes
+    del bpy.types.Scene.vircadia_lightmap_denoising_prefilter
+    del bpy.types.Scene.vircadia_lightmap_denoising_quality
 
 if __name__ == "__main__":
     register()
