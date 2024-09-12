@@ -3,6 +3,7 @@ from . import import_export
 from . import ui
 from . import utils
 from . import operators
+from . import lightmap
 
 bl_info = {
     "name": "Vircadia World Tools",
@@ -19,6 +20,7 @@ def register():
     ui.register()
     utils.register()
     operators.register()
+    lightmap.register()
 
     # Register the transform update handler
     bpy.app.handlers.depsgraph_update_post.append(utils.object_creation.transform_update_handler)
@@ -27,6 +29,7 @@ def unregister():
     # Unregister the transform update handler
     bpy.app.handlers.depsgraph_update_post.remove(utils.object_creation.transform_update_handler)
 
+    lightmap.unregister()
     operators.unregister()
     utils.unregister()
     ui.unregister()
