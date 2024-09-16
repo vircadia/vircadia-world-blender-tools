@@ -7,6 +7,19 @@ def update_visibility(self, context):
         update_object_visibility(obj, context.scene)
     update_lightmap_visibility(context.scene)
 
+    # Update scene world based on hide_lightmaps state
+    for area in context.screen.areas:
+        if area.type == 'VIEW_3D':
+            for space in area.spaces:
+                if space.type == 'VIEW_3D':
+                    if context.scene.vircadia_hide_lightmaps:
+                        # Restore previous scene world state
+                        space.shading.use_scene_world = context.scene.vircadia_previous_scene_world
+                    else:
+                        # Store current state and set scene world to False when showing lightmaps
+                        context.scene.vircadia_previous_scene_world = space.shading.use_scene_world
+                        space.shading.use_scene_world = False
+
 def update_object_visibility(obj, scene):
     # Check if object is a collision object
     is_collision = any(name in obj.name.lower() for name in ["collision", "collider", "collides"]) or \
@@ -110,7 +123,7 @@ def show_lightmaps(scene):
             links = mat.node_tree.links
 
             # Find Lightmap texture node
-            lightmap_node = next((node for node in nodes if node.type == 'TEX_IMAGE' and 'Lightmap' in node.label), None)
+            lightmap_node = next((node for node in nodes if node.type == 'TEX_IMAGE' and 'vircadia_lightmapData' in node.label), None)
             if lightmap_node:
                 lightmaps_found = True
                 # Add UV Map node for Lightmap
@@ -347,10 +360,10 @@ def register():
         default=True,
         update=update_visibility
     )
-    bpy.types.Scene.vircadia_content_path = StringProperty(
-        name="Content Path",
-        description="Path to the content directory for Vircadia assets",
-        default="",
+    bpy.types.Scene.vircadia_previous_scene_world = BoolProperty(
+        name="Previous Scene World State",
+        description="Stores the previous state of use_scene_world",
+        default=True
     )
     bpy.utils.register_class(VIRCADIA_PT_main_panel)
 
@@ -366,6 +379,7 @@ def unregister():
     del bpy.types.Scene.vircadia_hide_armatures
     del bpy.types.Scene.vircadia_hide_lightmaps
     del bpy.types.Scene.vircadia_content_path
+    del bpy.types.Scene.vircadia_previous_scene_world
 
 if __name__ == "__main__":
     register()

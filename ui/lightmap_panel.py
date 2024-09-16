@@ -1,5 +1,6 @@
 import bpy
 from bpy.types import Panel
+from bpy.props import EnumProperty
 from ..lightmap import lightmap_utils
 
 class VIRCADIA_PT_lightmap_panel(Panel):
@@ -23,11 +24,14 @@ class VIRCADIA_PT_lightmap_panel(Panel):
         box = layout.box()
         box.label(text="Lightmap Configuration")
         box.prop(scene, "vircadia_lightmap_color_space", text="Color Space")
-        box.prop(scene, "vircadia_lightmap_resolution_single", text="Single Resolution")
-        box.prop(scene, "vircadia_lightmap_resolution_small", text="Small Group Resolution")
-        box.prop(scene, "vircadia_lightmap_resolution_large", text="Large Group Resolution")
-        box.prop(scene, "vircadia_lightmap_small_threshold", text="Small Group Threshold")
-        box.prop(scene, "vircadia_lightmap_large_threshold", text="Large Group Threshold")
+        box.prop(scene, "vircadia_lightmap_texel_density", text="Texel Density")
+        box.prop(scene, "vircadia_lightmap_min_resolution", text="Min Resolution")
+        box.prop(scene, "vircadia_lightmap_max_resolution", text="Max Resolution")
+        box.prop(scene, "vircadia_lightmap_factor_shared_materials", text="Factor Shared Materials")
+        box.prop(scene, "vircadia_lightmap_unwrap_context", text="Unwrap Context")
+        box.prop(scene, "vircadia_lightmap_margin", text="Margin")
+        box.prop(scene, "vircadia_lightmap_uv_type", text="UV Type")
+        box.prop(scene, "vircadia_lightmap_automatic_grouping")
 
         # Bake settings
         box = layout.box()
@@ -43,6 +47,7 @@ class VIRCADIA_PT_lightmap_panel(Panel):
         box.prop(scene, "vircadia_lightmap_adaptive_min_samples", text="Min Samples")
         box.prop(scene, "vircadia_lightmap_use_denoising", text="Use Denoising")
         box.prop(scene, "vircadia_lightmap_denoiser", text="Denoiser")
+        box.prop(scene, "vircadia_lightmap_bake_margin", text="Bake Margin")
         
         if scene.vircadia_lightmap_denoiser == 'OPTIX':
             box.prop(scene, "vircadia_lightmap_denoising_input_passes", text="Passes")
@@ -55,39 +60,66 @@ class VIRCADIA_PT_lightmap_panel(Panel):
         layout.operator("vircadia.generate_lightmaps", text="Generate Lightmaps")
 
 def register():
+    bpy.types.Scene.vircadia_lightmap_automatic_grouping = bpy.props.BoolProperty(
+        name="Automatic Grouping",
+        description="Selected objects will be grouped automatically",
+        default=False
+)
     bpy.types.Scene.vircadia_lightmap_color_space = bpy.props.StringProperty(
         name="Color Space",
         default="sRGB"
     )
-    bpy.types.Scene.vircadia_lightmap_resolution_single = bpy.props.IntProperty(
-        name="Single Resolution",
-        default=1024,
+    bpy.types.Scene.vircadia_lightmap_texel_density = bpy.props.FloatProperty(
+        name="Texel Density",
+        default=16.0,
+        min=0.1,
+        max=1000.0,
+        description="Pixels per unit for lightmap textures"
+    )
+    bpy.types.Scene.vircadia_lightmap_min_resolution = bpy.props.IntProperty(
+        name="Min Resolution",
+        default=128,
+        min=32,
+        max=4096,
+        description="Minimum lightmap resolution"
+    )
+    bpy.types.Scene.vircadia_lightmap_max_resolution = bpy.props.IntProperty(
+        name="Max Resolution",
+        default=8192,
         min=64,
-        max=8192
+        max=8192,
+        description="Maximum lightmap resolution"
     )
-    bpy.types.Scene.vircadia_lightmap_resolution_small = bpy.props.IntProperty(
-        name="Small Group Resolution",
-        default=2048,
-        min=64,
-        max=8192
+    bpy.types.Scene.vircadia_lightmap_factor_shared_materials = bpy.props.BoolProperty(
+        name="Factor Shared Materials",
+        default=True,
+        description="Include all objects sharing the same material when calculating lightmap resolution"
     )
-    bpy.types.Scene.vircadia_lightmap_resolution_large = bpy.props.IntProperty(
-        name="Large Group Resolution",
-        default=4096,
-        min=64,
-        max=8192
+    bpy.types.Scene.vircadia_lightmap_unwrap_context = bpy.props.EnumProperty(
+        name="Unwrap Context",
+        items=[
+            ('ALL_FACES', "All Faces", "Unwrap all faces"),
+            ('SEL_FACES', "Selected Faces", "Unwrap only selected faces")
+        ],
+        default='ALL_FACES',
+        description="Context for unwrapping"
     )
-    bpy.types.Scene.vircadia_lightmap_small_threshold = bpy.props.IntProperty(
-        name="Small Group Threshold",
-        default=2,
-        min=1,
-        max=100
+    bpy.types.Scene.vircadia_lightmap_margin = bpy.props.FloatProperty(
+        name="Margin",
+        default=0.2,
+        min=0.0,
+        max=1.0,
+        description="Margin between UV islands"
     )
-    bpy.types.Scene.vircadia_lightmap_large_threshold = bpy.props.IntProperty(
-        name="Large Group Threshold",
-        default=7,
-        min=1,
-        max=100
+    bpy.types.Scene.vircadia_lightmap_uv_type = EnumProperty(
+        name="UV Type",
+        items=[
+            ('LIGHTMAP_PACK', "Lightmap Pack", "Use Lightmap Pack for UV unwrapping"),
+            ('SMART_UV_PROJECT', "Smart UV Project", "Use Smart UV Project for UV unwrapping"),
+            ('UNWRAP', "Unwrap", "Use regular Unwrap for UV unwrapping")
+        ],
+        default='LIGHTMAP_PACK',
+        description="Choose the UV unwrapping method for lightmap generation"
     )
 
     # Register properties for bake settings
@@ -118,7 +150,7 @@ def register():
     )
     bpy.types.Scene.vircadia_lightmap_adaptive_threshold = bpy.props.FloatProperty(
         name="Adaptive Threshold",
-        default=0.01,
+        default=0.1,
         min=0,
         max=1
     )
@@ -170,6 +202,13 @@ def register():
         ],
         default='HIGH'
     )
+    bpy.types.Scene.vircadia_lightmap_bake_margin = bpy.props.IntProperty(
+        name="Bake Margin",
+        default=4,
+        min=0,
+        max=64,
+        description="Extends the baked result as a post process filter"
+    )
 
     bpy.utils.register_class(VIRCADIA_PT_lightmap_panel)
 
@@ -177,11 +216,14 @@ def unregister():
     bpy.utils.unregister_class(VIRCADIA_PT_lightmap_panel)
 
     del bpy.types.Scene.vircadia_lightmap_color_space
-    del bpy.types.Scene.vircadia_lightmap_resolution_single
-    del bpy.types.Scene.vircadia_lightmap_resolution_small
-    del bpy.types.Scene.vircadia_lightmap_resolution_large
-    del bpy.types.Scene.vircadia_lightmap_small_threshold
-    del bpy.types.Scene.vircadia_lightmap_large_threshold
+    del bpy.types.Scene.vircadia_lightmap_texel_density
+    del bpy.types.Scene.vircadia_lightmap_min_resolution
+    del bpy.types.Scene.vircadia_lightmap_max_resolution
+    del bpy.types.Scene.vircadia_lightmap_factor_shared_materials
+    del bpy.types.Scene.vircadia_lightmap_unwrap_context
+    del bpy.types.Scene.vircadia_lightmap_margin
+    del bpy.types.Scene.vircadia_lightmap_uv_type
+    del bpy.types.Scene.vircadia_lightmap_automatic_grouping
 
     # Unregister properties for bake settings
     del bpy.types.Scene.vircadia_lightmap_bake_type
@@ -198,6 +240,7 @@ def unregister():
     del bpy.types.Scene.vircadia_lightmap_denoising_input_passes
     del bpy.types.Scene.vircadia_lightmap_denoising_prefilter
     del bpy.types.Scene.vircadia_lightmap_denoising_quality
+    del bpy.types.Scene.vircadia_lightmap_bake_margin
 
 if __name__ == "__main__":
     register()

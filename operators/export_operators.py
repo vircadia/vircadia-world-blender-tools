@@ -27,6 +27,7 @@ class EXPORT_OT_vircadia_json(bpy.types.Operator):
 
     def invoke(self, context, event):
         logging.info("Invoking JSON export")
+        self.filepath = os.path.join(os.path.dirname(self.filepath), config.DEFAULT_JSON_EXPORT_FILENAME)
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
