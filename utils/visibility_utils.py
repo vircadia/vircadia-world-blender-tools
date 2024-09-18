@@ -21,14 +21,26 @@ def temporarily_unhide_objects(context):
     hidden_objects = []
     print("Temporarily unhiding objects")
     for obj in bpy.data.objects:
-        if obj.hide_get():
-            hidden_objects.append(obj)
+        visibility_state = {
+            'hide_viewport': obj.hide_viewport,
+            'hide_render': obj.hide_render,
+            'hide_get': obj.hide_get(),
+            'display_type': obj.display_type
+        }
+        if any(visibility_state.values()):
+            hidden_objects.append((obj, visibility_state))
+            obj.hide_viewport = False
+            obj.hide_render = False
             obj.hide_set(False)
+            obj.display_type = 'TEXTURED'
     print(f"Temporarily unhidden {len(hidden_objects)} objects")
     return hidden_objects
 
 def restore_hidden_objects(hidden_objects):
     print("Restoring hidden objects")
-    for obj in hidden_objects:
-        obj.hide_set(True)
+    for obj, visibility_state in hidden_objects:
+        obj.hide_viewport = visibility_state['hide_viewport']
+        obj.hide_render = visibility_state['hide_render']
+        obj.hide_set(visibility_state['hide_get'])
+        obj.display_type = visibility_state['display_type']
     print(f"Restored {len(hidden_objects)} hidden objects")

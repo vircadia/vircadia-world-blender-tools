@@ -147,7 +147,20 @@ def load_entity_template(entity_type):
         return {"Entities": [{"type": entity_type}]}
 
 def has_model_entities():
-    return any(obj.get("type", "").lower() == "model" for obj in bpy.data.objects)
+    collision_keywords = ["collider", "collision", "collides", "colliders", "collisions"]
+    
+    def is_collision_object(obj):
+        return any(keyword in obj.name.lower() for keyword in collision_keywords)
+    
+    def is_zone_entity(obj):
+        return obj.get("type", "").lower() == "zone"
+    
+    return any(
+        obj.type == 'MESH' and
+        not is_zone_entity(obj) and
+        not is_collision_object(obj)
+        for obj in bpy.data.objects
+    )
 
 def has_collision_objects():
     collision_keywords = ["collider", "collision", "collides", "colliders", "collisions"]

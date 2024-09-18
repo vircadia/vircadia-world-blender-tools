@@ -45,8 +45,21 @@ def is_collision_or_child_of_collision(obj):
 def is_keylight_object(obj):
     return "keylight" in obj.name.lower()
 
+def is_sun_light(obj):
+    return obj.type == 'LIGHT' and obj.data.type == 'SUN'
+
+def is_other_light(obj):
+    return obj.type == 'LIGHT' and obj.data.type in ['POINT', 'SPOT', 'AREA']
+
+def vircadia_lightmap_data_exists():
+    return "vircadia_lightmapData" in bpy.data.objects
+
 def should_hide_in_main_export(obj):
-    return is_collision_or_child_of_collision(obj) or is_keylight_object(obj)
+    if is_collision_or_child_of_collision(obj) or is_keylight_object(obj) or is_sun_light(obj):
+        return True
+    if vircadia_lightmap_data_exists() and is_other_light(obj):
+        return True
+    return False
 
 def export_glb(context, filepath):
     print(f"Starting GLB export to {filepath}")
@@ -81,10 +94,16 @@ def export_glb(context, filepath):
 
     try:
         print("Exporting main world GLB...")
-        # Hide collision objects, their children, and keylight objects for main export
+        # Hide objects based on the should_hide_in_main_export function
         for obj in bpy.data.objects:
             if obj.type != 'EMPTY' and should_hide_in_main_export(obj):
-                obj.hide_set(True)
+                try:
+                    if obj.name in context.view_layer.objects:
+                        obj.hide_set(True)
+                    else:
+                        print(f"Object '{obj.name}' not in current View Layer, skipping hide operation")
+                except Exception as e:
+                    print(f"Warning: Could not hide object '{obj.name}': {str(e)}")
 
         bpy.ops.export_scene.gltf(**main_export_settings)
         print(f"Successfully exported main world GLB to {filepath}")
@@ -93,10 +112,16 @@ def export_glb(context, filepath):
         # Hide non-collision objects and unhide collision objects and their children
         for obj in bpy.data.objects:
             if obj.type != 'EMPTY':
-                if is_collision_or_child_of_collision(obj):
-                    obj.hide_set(False)
-                else:
-                    obj.hide_set(True)
+                try:
+                    if obj.name in context.view_layer.objects:
+                        if is_collision_or_child_of_collision(obj):
+                            obj.hide_set(False)
+                        else:
+                            obj.hide_set(True)
+                    else:
+                        print(f"Object '{obj.name}' not in current View Layer, skipping visibility change")
+                except Exception as e:
+                    print(f"Warning: Could not change visibility of object '{obj.name}': {str(e)}")
 
         bpy.ops.export_scene.gltf(**collision_export_settings)
         print(f"Successfully exported collision objects GLB to {collision_filepath}")

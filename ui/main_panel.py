@@ -49,7 +49,6 @@ def update_lightmap_visibility(scene):
 
 def hide_lightmaps(scene):
     print("Starting to hide lightmaps...")
-    # Restore original material states and light visibility
     for mat in bpy.data.materials:
         if "original_nodes" in mat:
             mat.node_tree.nodes.clear()
@@ -59,21 +58,38 @@ def hide_lightmaps(scene):
                 node.label = node_data["label"]
                 node.location = node_data["location"]
                 
+                # Restore node-specific properties
+                if node.type == 'MIX_RGB':
+                    if "blend_type" in node_data:
+                        node.blend_type = node_data["blend_type"]
+                elif node.type == 'MATH':
+                    if "operation" in node_data:
+                        node.operation = node_data["operation"]
+                
+                if hasattr(node, "interpolation") and "interpolation" in node_data:
+                    node.interpolation = node_data["interpolation"]
+                
+                if hasattr(node, "color_ramp") and "color_ramp" in node_data:
+                    node.color_ramp.elements.clear()
+                    for element in node_data["color_ramp"]:
+                        new_element = node.color_ramp.elements.new(element["position"])
+                        new_element.color = element["color"]
+                
                 # Special handling for image texture nodes
                 if node.type == 'TEX_IMAGE' and "image" in node_data:
                     if node_data["image"] is not None:
                         node.image = bpy.data.images.get(node_data["image"])
                 
-                for input_name, input_data in node_data["inputs"].items():
-                    if input_name not in node.inputs:
-                        continue  # Skip inputs that no longer exist
-                    if input_data["is_linked"]:
-                        continue  # We'll reconnect links later
-                    if hasattr(node.inputs[input_name], "default_value") and input_data["default_value"] is not None:
-                        try:
-                            node.inputs[input_name].default_value = input_data["default_value"]
-                        except (TypeError, AttributeError):
-                            print(f"Warning: Could not set default value for input '{input_name}' on node '{node.name}'")
+                # Restore input and output values
+                for socket_type in ["inputs", "outputs"]:
+                    for socket_name, socket_data in node_data[socket_type].items():
+                        if socket_name in getattr(node, socket_type):
+                            socket = getattr(node, socket_type)[socket_name]
+                            if not socket_data["is_linked"] and hasattr(socket, "default_value"):
+                                try:
+                                    socket.default_value = socket_data["default_value"]
+                                except (TypeError, AttributeError):
+                                    print(f"Warning: Could not set default value for {socket_type} '{socket_name}' on node '{node.name}'")
             
             # Restore links
             for link_data in mat["original_links"]:
@@ -108,8 +124,14 @@ def show_lightmaps(scene):
                 "name": node.name,
                 "label": node.label,
                 "location": node.location[:],
+                "blend_type": node.blend_type if node.type == 'MIX_RGB' else None,
+                "operation": node.operation if node.type == 'MATH' else None,
+                "interpolation": node.interpolation if hasattr(node, "interpolation") else None,
+                "color_ramp": [{"position": element.position, "color": element.color[:]} for element in node.color_ramp.elements] if hasattr(node, "color_ramp") else None,
                 "inputs": {input.name: {"default_value": input.default_value if hasattr(input, "default_value") else None, 
                                         "is_linked": input.is_linked} for input in node.inputs},
+                "outputs": {output.name: {"default_value": output.default_value if hasattr(output, "default_value") else None, 
+                                          "is_linked": output.is_linked} for output in node.outputs},
                 "image": node.image.name if node.type == 'TEX_IMAGE' and node.image else None
             } for node in mat.node_tree.nodes]
             mat["original_links"] = [{
