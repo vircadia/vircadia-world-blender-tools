@@ -1,4 +1,4 @@
-# Vircadia World Tools
+# Vircadia World Blender Tools
 
 This is a Blender add-on that allows the creation of full Vircadia worlds within Blender, to be exported directly for upload into the server once done.
 
