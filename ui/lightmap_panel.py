@@ -58,6 +58,9 @@ class VIRCADIA_PT_lightmap_panel(Panel):
 
         # Generate lightmaps button
         layout.operator("vircadia.generate_lightmaps", text="Generate Lightmaps")
+        
+        # Add the Clear Lightmaps button
+        layout.operator("vircadia.clear_lightmaps", text="Clear Lightmaps")
 
 def register():
     bpy.types.Scene.vircadia_lightmap_automatic_grouping = bpy.props.BoolProperty(
