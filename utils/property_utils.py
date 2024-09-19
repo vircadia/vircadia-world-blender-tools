@@ -114,22 +114,44 @@ def update_blender_transform_from_properties(obj):
         obj.rotation_quaternion = coordinate_utils.vircadia_to_blender_rotation(*vircadia_rot)
 
 def create_property_update_handler(obj, prop_name):
-    def property_update_handler(self, context):
-        update_blender_transform_from_properties(obj)
-
-    return property_update_handler
+    def update_handler():
+        if prop_name.startswith('position'):
+            update_blender_transform_from_properties(obj)
+        elif prop_name.startswith('dimensions'):
+            update_blender_transform_from_properties(obj)
+        elif prop_name.startswith('rotation'):
+            update_blender_transform_from_properties(obj)
+        return obj[prop_name]
+    return update_handler
 
 def register_property_update_handlers(obj):
     for prop_name in ['position_x', 'position_y', 'position_z',
                       'dimensions_x', 'dimensions_y', 'dimensions_z',
                       'rotation_x', 'rotation_y', 'rotation_z', 'rotation_w']:
         if prop_name in obj:
-            obj.property_unregister(prop_name)
-            obj.property_overridable_library_set(prop_name, True)
-            obj[f"{prop_name}_update"] = create_property_update_handler(obj, prop_name)
-            obj.driver_add(f'["{prop_name}"]').driver.expression = f"{prop_name}_update"
-
-@bpy.app.handlers.persistent
+            update_handler = create_property_update_handler(obj, prop_name)
+            
+            # Remove existing driver if it exists
+            if obj.animation_data and obj.animation_data.drivers:
+                for dr in obj.animation_data.drivers:
+                    if dr.data_path == f'["{prop_name}"]':
+                        obj.animation_data.drivers.remove(dr)
+            
+            # Add new driver
+            dr = obj.driver_add(f'["{prop_name}"]').driver
+            dr.type = 'SCRIPTED'
+            dr.expression = f"{prop_name}_update()"
+            
+            # Add variable to driver
+            var = dr.variables.new()
+            var.name = prop_name
+            var.type = 'SINGLE_PROP'
+            var.targets[0].id = obj
+            var.targets[0].data_path = f'["{prop_name}"]'
+            
+            # Add function to driver namespace
+            bpy.app.driver_namespace[f"{prop_name}_update"] = update_handler
+            
 def load_handler(dummy):
     for obj in bpy.data.objects:
         if "name" in obj:

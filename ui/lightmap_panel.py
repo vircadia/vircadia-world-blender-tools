@@ -27,11 +27,11 @@ class VIRCADIA_PT_lightmap_panel(Panel):
         box.prop(scene, "vircadia_lightmap_texel_density", text="Texel Density")
         box.prop(scene, "vircadia_lightmap_min_resolution", text="Min Resolution")
         box.prop(scene, "vircadia_lightmap_max_resolution", text="Max Resolution")
-        box.prop(scene, "vircadia_lightmap_factor_shared_materials", text="Factor Shared Materials")
-        box.prop(scene, "vircadia_lightmap_unwrap_context", text="Unwrap Context")
+        # box.prop(scene, "vircadia_lightmap_factor_shared_materials", text="Factor Shared Materials")
         box.prop(scene, "vircadia_lightmap_margin", text="Margin")
+        box.prop(scene, "vircadia_lightmap_unwrap_context", text="Unwrap Context")
         box.prop(scene, "vircadia_lightmap_uv_type", text="UV Type")
-        box.prop(scene, "vircadia_lightmap_automatic_grouping")
+        # box.prop(scene, "vircadia_lightmap_automatic_grouping") #TODO revamp grouping later
 
         # Bake settings
         box = layout.box()

@@ -50,143 +50,131 @@ def update_lightmap_visibility(scene):
 def hide_lightmaps(scene):
     print("Starting to hide lightmaps...")
     for mat in bpy.data.materials:
-        if "original_nodes" in mat:
-            mat.node_tree.nodes.clear()
-            for node_data in mat["original_nodes"]:
-                node = mat.node_tree.nodes.new(type=node_data["type"])
-                node.name = node_data["name"]
-                node.label = node_data["label"]
-                node.location = node_data["location"]
-                
-                # Restore node-specific properties
-                if node.type == 'MIX_RGB':
-                    if "blend_type" in node_data:
-                        node.blend_type = node_data["blend_type"]
-                elif node.type == 'MATH':
-                    if "operation" in node_data:
-                        node.operation = node_data["operation"]
-                
-                if hasattr(node, "interpolation") and "interpolation" in node_data:
-                    node.interpolation = node_data["interpolation"]
-                
-                if hasattr(node, "color_ramp") and "color_ramp" in node_data:
-                    node.color_ramp.elements.clear()
-                    for element in node_data["color_ramp"]:
-                        new_element = node.color_ramp.elements.new(element["position"])
-                        new_element.color = element["color"]
-                
-                # Special handling for image texture nodes
-                if node.type == 'TEX_IMAGE' and "image" in node_data:
-                    if node_data["image"] is not None:
-                        node.image = bpy.data.images.get(node_data["image"])
-                
-                # Restore input and output values
-                for socket_type in ["inputs", "outputs"]:
-                    for socket_name, socket_data in node_data[socket_type].items():
-                        if socket_name in getattr(node, socket_type):
-                            socket = getattr(node, socket_type)[socket_name]
-                            if not socket_data["is_linked"] and hasattr(socket, "default_value"):
-                                try:
-                                    socket.default_value = socket_data["default_value"]
-                                except (TypeError, AttributeError):
-                                    print(f"Warning: Could not set default value for {socket_type} '{socket_name}' on node '{node.name}'")
-            
-            # Restore links
-            for link_data in mat["original_links"]:
-                try:
-                    from_node = mat.node_tree.nodes[link_data["from_node"]]
-                    to_node = mat.node_tree.nodes[link_data["to_node"]]
-                    from_socket = from_node.outputs[link_data["from_socket"]]
-                    to_socket = to_node.inputs[link_data["to_socket"]]
-                    mat.node_tree.links.new(from_socket, to_socket)
-                except KeyError:
-                    print(f"Warning: Could not restore link {link_data}")
-            
-            del mat["original_nodes"]
-            del mat["original_links"]
-    
-    # Restore light visibility
-    for obj in bpy.data.objects:
-        if obj.type == 'LIGHT' and "original_hide" in obj:
-            obj.hide_set(obj["original_hide"])
-            del obj["original_hide"]
+        if mat.use_nodes:
+            nodes = mat.node_tree.nodes
+            links = mat.node_tree.links
 
-    print("Lightmaps hidden and original states restored.")
+            # Find lightmap-related nodes
+            lightmap_node = next((node for node in nodes if node.type == 'TEX_IMAGE' and 'vircadia_lightmapData' in node.label), None)
+            mix_node = next((node for node in nodes if node.type == 'MIX_RGB' and lightmap_node in [link.from_node for link in node.inputs[2].links]), None)
+            principled_node = next((node for node in nodes if node.type == 'BSDF_PRINCIPLED'), None)
+
+            if lightmap_node and mix_node and principled_node:
+                # Disconnect and mute lightmap node
+                for link in lightmap_node.outputs[0].links:
+                    links.remove(link)
+                lightmap_node.mute = True
+
+                # Disconnect and mute mix node
+                for link in mix_node.outputs[0].links:
+                    links.remove(link)
+                mix_node.mute = True
+
+                # Reconnect the original base color
+                if mix_node.inputs[1].is_linked:
+                    original_color_socket = mix_node.inputs[1].links[0].from_socket
+                    links.new(original_color_socket, principled_node.inputs['Base Color'])
+
+            # Disable and disconnect UV Map nodes for lightmaps
+            uv_map_nodes = [node for node in nodes if node.type == 'UVMAP' and node.uv_map == "Lightmap"]
+            for uv_node in uv_map_nodes:
+                for link in uv_node.outputs[0].links:
+                    links.remove(link)
+                uv_node.mute = True
+
+    # Handle lights
+    for obj in bpy.data.objects:
+        if obj.type == 'LIGHT':
+            if "lightmap" not in obj.name.lower():
+                obj.hide_viewport = False
+                obj.hide_render = False
+
+    print("Lightmaps hidden and connections restored.")
 
 def show_lightmaps(scene):
     print("Starting to show lightmaps...")
     lightmaps_found = False
     for mat in bpy.data.materials:
         if mat.use_nodes:
-            # Store original material state
-            mat["original_nodes"] = [{
-                "type": node.bl_idname,
-                "name": node.name,
-                "label": node.label,
-                "location": node.location[:],
-                "blend_type": node.blend_type if node.type == 'MIX_RGB' else None,
-                "operation": node.operation if node.type == 'MATH' else None,
-                "interpolation": node.interpolation if hasattr(node, "interpolation") else None,
-                "color_ramp": [{"position": element.position, "color": element.color[:]} for element in node.color_ramp.elements] if hasattr(node, "color_ramp") else None,
-                "inputs": {input.name: {"default_value": input.default_value if hasattr(input, "default_value") else None, 
-                                        "is_linked": input.is_linked} for input in node.inputs},
-                "outputs": {output.name: {"default_value": output.default_value if hasattr(output, "default_value") else None, 
-                                          "is_linked": output.is_linked} for output in node.outputs},
-                "image": node.image.name if node.type == 'TEX_IMAGE' and node.image else None
-            } for node in mat.node_tree.nodes]
-            mat["original_links"] = [{
-                "from_node": link.from_node.name,
-                "to_node": link.to_node.name,
-                "from_socket": link.from_socket.name,
-                "to_socket": link.to_socket.name
-            } for link in mat.node_tree.links]
-
             nodes = mat.node_tree.nodes
             links = mat.node_tree.links
 
-            # Find Lightmap texture node
-            lightmap_node = next((node for node in nodes if node.type == 'TEX_IMAGE' and 'vircadia_lightmapData' in node.label), None)
+            # Find and enable lightmap-related nodes
+            lightmap_node = next((node for node in nodes if node.type == 'TEX_IMAGE' and node.label.startswith('vircadia_lightmapData_')), None)
             if lightmap_node:
+                lightmap_node.mute = False
                 lightmaps_found = True
-                # Add UV Map node for Lightmap
-                uv_map_node = nodes.new(type='ShaderNodeUVMap')
-                uv_map_node.uv_map = "Lightmap"  # Assume second UV map is named Lightmap
-                links.new(uv_map_node.outputs[0], lightmap_node.inputs[0])
 
-                # Add Mix node
-                mix_node = nodes.new(type='ShaderNodeMixRGB')
-                mix_node.blend_type = 'MULTIPLY'
-                mix_node.inputs[0].default_value = 1.0  # Set factor to 1.0
+                # Get the mesh object using this material
+                obj = next((obj for obj in bpy.data.objects if obj.type == 'MESH' and mat.name in obj.material_slots), None)
+                if obj:
+                    mesh = obj.data
+                    
+                    # Ensure UV Map node for the first UV map exists and is connected
+                    first_uv_map = mesh.uv_layers[0] if mesh.uv_layers else None
+                    if first_uv_map:
+                        uv_map_node = next((node for node in nodes if node.type == 'UVMAP' and node.uv_map == first_uv_map.name), None)
+                        if not uv_map_node:
+                            uv_map_node = nodes.new(type='ShaderNodeUVMap')
+                            uv_map_node.uv_map = first_uv_map.name
+                            uv_map_node.location = (lightmap_node.location[0] - 300, lightmap_node.location[1] + 200)
+                        uv_map_node.mute = False
+                        
+                        # Connect to other texture nodes
+                        for node in nodes:
+                            if node.type == 'TEX_IMAGE' and node != lightmap_node:
+                                if not node.inputs[0].is_linked:
+                                    links.new(uv_map_node.outputs[0], node.inputs[0])
 
-                # Find Principled BSDF node
+                    # Ensure UV Map node for Lightmap exists and is connected
+                    lightmap_uv = next((uv for uv in mesh.uv_layers if uv.name == "Lightmap"), None)
+                    if lightmap_uv:
+                        lightmap_uv_node = next((node for node in nodes if node.type == 'UVMAP' and node.uv_map == "Lightmap"), None)
+                        if not lightmap_uv_node:
+                            lightmap_uv_node = nodes.new(type='ShaderNodeUVMap')
+                            lightmap_uv_node.uv_map = "Lightmap"
+                            lightmap_uv_node.location = (lightmap_node.location[0] - 300, lightmap_node.location[1])
+                        lightmap_uv_node.mute = False
+                        if not lightmap_node.inputs[0].is_linked:
+                            links.new(lightmap_uv_node.outputs[0], lightmap_node.inputs[0])
+
+                # Ensure Mix node exists and is connected
+                mix_node = next((node for node in nodes if node.type == 'MIX_RGB' and lightmap_node in [link.from_node for link in node.inputs[2].links]), None)
+                if not mix_node:
+                    mix_node = nodes.new(type='ShaderNodeMixRGB')
+                    mix_node.blend_type = 'MULTIPLY'
+                    mix_node.inputs[0].default_value = 1.0
+                    mix_node.location = (lightmap_node.location[0] + 300, lightmap_node.location[1])
+                mix_node.mute = False
+
+                # Connect lightmap to Mix node if not already connected
+                if not mix_node.inputs[2].is_linked:
+                    links.new(lightmap_node.outputs[0], mix_node.inputs[2])
+
+                # Find Principled BSDF node and connect Mix node
                 principled_node = next((node for node in nodes if node.type == 'BSDF_PRINCIPLED'), None)
                 if principled_node:
-                    # Store original base color
-                    original_color = principled_node.inputs['Base Color'].default_value[:]
-
-                    # Set up connections
+                    # Copy the base color from Principled BSDF to Mix node
                     if principled_node.inputs['Base Color'].is_linked:
-                        original_color_input = principled_node.inputs['Base Color'].links[0].from_socket
-                        links.new(original_color_input, mix_node.inputs[1])
+                        original_color_socket = principled_node.inputs['Base Color'].links[0].from_socket
+                        links.new(original_color_socket, mix_node.inputs[1])
                     else:
-                        mix_node.inputs[1].default_value = original_color
+                        # If not linked, copy the color value
+                        mix_node.inputs[1].default_value = principled_node.inputs['Base Color'].default_value
 
-                    links.new(lightmap_node.outputs[0], mix_node.inputs[2])
+                    # Remove existing links to Base Color
+                    for link in principled_node.inputs['Base Color'].links:
+                        links.remove(link)
+                    
+                    # Connect Mix node to Principled BSDF Base Color
                     links.new(mix_node.outputs[0], principled_node.inputs['Base Color'])
-
-            # Add UV Map nodes for other texture nodes
-            for node in nodes:
-                if node.type == 'TEX_IMAGE' and node != lightmap_node:
-                    uv_map_node = nodes.new(type='ShaderNodeUVMap')
-                    uv_map_node.uv_map = "UVMap"  # Assume first UV map is named UVMap
-                    links.new(uv_map_node.outputs[0], node.inputs[0])
 
     # Handle lights
     for obj in bpy.data.objects:
         if obj.type == 'LIGHT':
-            obj["original_hide"] = obj.hide_get()
             if "lightmap" not in obj.name.lower():
-                obj.hide_set(True)
+                obj.hide_viewport = True
+                obj.hide_render = True
 
     if not lightmaps_found:
         scene.vircadia_hide_lightmaps = True

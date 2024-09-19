@@ -10,6 +10,9 @@ class VIRCADIA_OT_generate_lightmaps(Operator):
 
     def execute(self, context):
         scene = context.scene
+        
+        # Set the "Hide Lightmaps" toggle to True
+        scene.vircadia_hide_lightmaps = True
 
         # Check for vircadia_lightmapData object
         self.check_and_create_lightmap_data_object(context)

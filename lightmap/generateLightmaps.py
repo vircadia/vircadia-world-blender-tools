@@ -429,6 +429,11 @@ def generate_lightmaps(objects, lightmap_settings, bake_settings):
 
     print("Lightmap generation and baking completed. Original UV states restored and correct custom properties added.")
 
+    # Toggle hide_lightmaps to show the lightmaps
+    bpy.context.scene.vircadia_hide_lightmaps = False
+
+    print("Lightmaps are now visible.")
+
 def create_lightmap_materials(lightmap_textures):
     # Ensure the vircadia_lightmapData collection exists
     lightmap_collection = bpy.data.collections.get("vircadia_lightmapData")
