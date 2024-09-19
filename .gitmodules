@@ -1,0 +1,3 @@
+[submodule "vircadia-world-meta"]
+	path = vircadia-world-meta
+	url = https://github.com/vircadia/vircadia-world-meta
