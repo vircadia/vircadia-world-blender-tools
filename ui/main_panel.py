@@ -315,6 +315,9 @@ class VIRCADIA_PT_main_panel(Panel):
         row.operator("export_scene.vircadia_json", text="Export JSON")
         row.operator("export_scene.vircadia_glb", text="Export GLB")
 
+        # New "Selected to Collision" button
+        box.operator("vircadia.selected_to_collision", text="Selected to Collision")
+
         # Convert Collisions
         box.operator("vircadia.convert_collisions", text="Convert Collisions To Vircadia")
 

@@ -4,6 +4,12 @@ import os
 from bpy.types import Operator
 from ..utils import property_utils, collection_utils, entities
 
+import bpy
+import json
+import os
+from bpy.types import Operator
+from ..utils import property_utils, collection_utils, entities
+
 class VIRCADIA_OT_convert_to_vircadia(Operator):
     bl_idname = "vircadia.convert_to_vircadia"
     bl_label = "Convert to Vircadia"
@@ -50,11 +56,61 @@ class VIRCADIA_OT_convert_to_vircadia(Operator):
         
         # Link the object to the type-specific collection
         collection.objects.link(obj)
+        
+        return collection
+
+class VIRCADIA_OT_selected_to_collision(Operator):
+    bl_idname = "vircadia.selected_to_collision"
+    bl_label = "Selected to Collision"
+    bl_description = "Convert selected objects to collision objects and then to Vircadia entities"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        selected_objects = context.selected_objects
+        converted_count = 0
+
+        for obj in selected_objects:
+            if obj.type == 'MESH':
+                # Strip all custom properties
+                for prop in list(obj.keys()):
+                    del obj[prop]
+
+                # Remove all materials
+                obj.data.materials.clear()
+
+                # Add "collision_" prefix to the object's name
+                if not obj.name.lower().startswith("collision_"):
+                    obj.name = f"collision_{obj.name}"
+                
+                converted_count += 1
+
+        # Run the "Convert Collisions To Vircadia" process
+        bpy.ops.vircadia.convert_collisions()
+
+        self.report({'INFO'}, f"Converted {converted_count} selected objects to collision objects and Vircadia entities.")
+        return {'FINISHED'}
+
+    @classmethod
+    def poll(cls, context):
+        return any(obj.type == 'MESH' for obj in context.selected_objects)
 
 def register():
     bpy.utils.register_class(VIRCADIA_OT_convert_to_vircadia)
+    bpy.utils.register_class(VIRCADIA_OT_selected_to_collision)
 
 def unregister():
+    bpy.utils.unregister_class(VIRCADIA_OT_selected_to_collision)
+    bpy.utils.unregister_class(VIRCADIA_OT_convert_to_vircadia)
+
+if __name__ == "__main__":
+    register()
+
+def register():
+    bpy.utils.register_class(VIRCADIA_OT_convert_to_vircadia)
+    bpy.utils.register_class(VIRCADIA_OT_selected_to_collision)
+
+def unregister():
+    bpy.utils.unregister_class(VIRCADIA_OT_selected_to_collision)
     bpy.utils.unregister_class(VIRCADIA_OT_convert_to_vircadia)
 
 if __name__ == "__main__":
