@@ -1,0 +1,136 @@
+# Asset Creation
+
+For best performance:
+
+- Use less materials by combining textures when applicable
+- Combine model clusters to lower the mesh count
+- Consider using instances (linked duplicates in Blender) for repeat assets placed far from each other, but keep in mind a large number of objects in a scene will burden the CPU.
+- Use multiple levels of detail (LOD) to lower polygon count
+
+:::note
+
+When using instances and LOD together, be sure to duplicate only `LOD0` when placing throughout the scene, otherwise additional meshes will be created and stacked.
+
+:::
+
+### Model Types
+
+Vircadia officially supports [glTF 2.0 models](https://www.khronos.org/gltf/).
+
+- **Binary (.glb)**: A single file making it efficient and easy for sharing, with one network request needed.
+
+- **Separate (.gltf, .bin, + textures)**: Multiple files requiring multiple network requests, useful if several models share resources like textures.
+
+- **Embedded (.gltf)**: One file with a Data URI payload, making it easy to edit manually, but increases file size by 20-30%. This format is not typically preferred over the Binary format.
+
+For most puproses a `.glb` file is adequate, however if you wish to re-use textures and materials in other projects and enviroments you may decide to use the second option, though this is more complicated.
+
+### LOD
+
+Take advantage of LOD (by appending the following suffixes to your meshes' name:
+
+- `_LOD0` _required, highest detail_
+- `_LOD1`
+- `_LOD2`
+- `_LOD3`
+- `_LOD4` _lowest detail_
+
+LODs are a great way to lower the onscreen polygon count as objects get farther from the camera. This is done by switching to simplified models at a specified distance or size. While this does increase the filesize somewhat, this can be mitigated by using draco compression.
+
+:::note
+
+You can use as few LODs as you like, or none at all, but keep in mind certain properties require `LOD0` at minimum, such as `vircadia_lod_hide`.
+
+:::
+
+### Draco Compression
+
+Draco Compression shrinks the size of 3D models and make them faster to share or download, without obvious visual quality loss. This can typically be enabled during the GLTF export process in your 3D editor.
+
+### Properties
+
+In your glTF extras properties, use the properties to configure LOD settings, overriding the defaults.
+
+For more information on how our LOD works, see Babylon.js' [documentation](https://doc.babylonjs.com/features/featuresDeepDive/mesh/LOD) on LOD.
+In [Blender](https://www.blender.org/), add these properties in the "Object" tab under "Custom Properties."
+
+#### Automatic Generation
+
+Property `vircadia_lod_auto`:
+
+- `true`
+- `false` _default_
+
+#### Mode
+
+Property `vircadia_lod_mode`:
+
+- `distance` _default_
+- `size`
+
+Distance mode switches between objects based on their distance from the camera
+Size mode switches between object depending their size on screen. As a natural result larger objects will maintain their detail at a greater distance.
+
+#### Distance
+
+Property `vircadia_lod_distance`:
+
+- `0` to `100000` in meters.
+
+##### Default
+
+| LOD  | Distance |
+| ---- | -------- |
+| LOD0 | 0        |
+| LOD1 | 15       |
+| LOD2 | 30       |
+| LOD3 | 60       |
+| LOD4 | 120      |
+
+#### Size
+
+Property `vircadia_lod_size`:
+
+- `0.01` to `1.0`
+
+##### Default
+
+...
+
+#### Billboard
+
+Property `vircadia_billboard_mode`:
+
+- `x`, `y`, `z`, `all` or `none` _default_
+
+With billboarding an object will always face the specified direction. This is especially useful on low detail LODs to create a "cardboard cutout" that always faces the camera. This is often used on the highest numbered LOD on trees and other foliage, but is not required.
+
+#### Hide
+
+property `vircadia_lod_hide`
+
+- `0` to `100000` in meters.
+
+Specifies the distance at which the object is culled completely (_optional_).
+
+:::note
+
+This property must be added to `LOD0` to take effect.
+
+:::
+
+### Collisions
+
+It is highly recommended to make your own simplified collision meshes rather than using the fully detailed models, as this uses significant computing power. Collisions can be enable/disabled on a model via the Collision tab of the Properties panel within the Create Tools of the Native Developer Client.
+
+:::note
+
+Remember to "hide" your collision mesh to keep it from being rendered.
+
+:::
+
+# Asset Hosting
+
+Configuring CORS on your hosting provider enables assets to be loaded into the world from URLs that are not on the same domain as the web client.
+
+1. [CORS on AWS S3](https://www.dynatrace.com/support/help/setup-and-configuration/setup-on-cloud-platforms/amazon-web-services/set-up-cors-in-amazon-s3) - Cloud
