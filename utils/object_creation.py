@@ -19,6 +19,8 @@ def get_blender_object_type(vircadia_type):
     }
     return type_mapping.get(vircadia_type.lower(), "EMPTY")
 
+# In utils/object_creation.py
+
 def create_blender_object(entity):
     vircadia_type = entity.get("type", "").lower()
     shape_type = entity.get("shape", "").lower()
@@ -63,8 +65,12 @@ def create_blender_object(entity):
         obj.location = coordinate_utils.vircadia_to_blender_coordinates(x, y, z)
 
     if "dimensions" in entity:
-        x, y, z = entity["dimensions"].values()
-        obj.scale = coordinate_utils.vircadia_to_blender_dimensions(x, y, z)
+        blender_dims = coordinate_utils.vircadia_to_blender_dimensions(
+            entity["dimensions"].get("x", 1),
+            entity["dimensions"].get("y", 1),
+            entity["dimensions"].get("z", 1)
+        )
+        obj.dimensions = blender_dims
 
     if "rotation" in entity:
         x, y, z, w = entity["rotation"].values()
@@ -75,9 +81,17 @@ def create_blender_object(entity):
     if vircadia_type == "zone" or (entity.get("visible") == "false" or entity.get("visible") is False):
         obj.display_type = 'WIRE'
 
-    # Set scale to (1, 1, 1) for "model" object types
-    if vircadia_type == "model":
-        obj.scale = (1, 1, 1)
+    # Special handling for Web entities
+    if vircadia_type == "web":
+        # Set dimensions directly, making it very thin in the Z direction
+        if "dimensions" in entity:
+            # Use the dimensions from the entity data if available
+            x = entity["dimensions"].get("x", 1)
+            y = entity["dimensions"].get("y", 1)
+            obj.dimensions = (x, y, 0.01)
+        else:
+            # Default dimensions if not specified in the entity data
+            obj.dimensions = (1, 1, 0.01)
 
     # Add update handler for transform synchronization
     bpy.app.handlers.depsgraph_update_post.append(create_transform_update_handler(obj))
@@ -96,11 +110,11 @@ def create_transform_update_handler(obj):
         obj["position_y"] = vircadia_pos[1]
         obj["position_z"] = vircadia_pos[2]
 
-        # Update dimensions (scale)
-        vircadia_scale = coordinate_utils.blender_to_vircadia_dimensions(*obj.scale)
-        obj["dimensions_x"] = vircadia_scale[0]
-        obj["dimensions_y"] = vircadia_scale[1]
-        obj["dimensions_z"] = vircadia_scale[2]
+        # Update dimensions
+        vircadia_dims = coordinate_utils.blender_to_vircadia_dimensions(*obj.dimensions)
+        obj["dimensions_x"] = vircadia_dims[0]
+        obj["dimensions_y"] = vircadia_dims[1]
+        obj["dimensions_z"] = vircadia_dims[2]
 
         # Update rotation
         if obj.rotation_mode == 'QUATERNION':

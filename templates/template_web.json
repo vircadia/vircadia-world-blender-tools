@@ -11,9 +11,9 @@
     "href": "",
     "description": "",
     "dimensions": {
-        "x": 1,
-        "y": 1,
-        "z": 1
+        "x": 2,
+        "y": 0,
+        "z": 2
     },
     "rotation": {
         "x": -0.0000000000000000,
@@ -41,6 +41,7 @@
     "cloneable": false,
     "cloneDynamic": false,
     "cloneAvatarEntity": false,
+	"vircadia_script": "",
     "script": "",
     "serverScripts": "",
     "color": {

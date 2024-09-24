@@ -22,6 +22,20 @@ skip_properties = {
     "ambientLight",
     "gravity",
     "queryAACube",
+    "groupCulled"
+    "href"
+    "ID"
+    "modelURL"
+    "cloneable"
+    "cloneLifetime"
+    "cloneDynamic"
+    "cloneAvatarEntity"
+    "canCastShadow"
+    "blendshapeCoefficients"
+    "angularDamping"
+    "animation_currentFrame"
+    "animation_firstFrame"
+    "animation_fps"
 }
 
 def should_filter_property(key):
@@ -45,13 +59,17 @@ def set_custom_properties(obj, data, prefix=""):
                     user_data_json = json.loads(value)
                     set_custom_properties(obj, user_data_json, "")  # Remove prefix for userData
                 except json.JSONDecodeError:
-                    print(f"Failed to decode userData JSON: {value}")
-            # Convert dimensions to Blender coordinate system
+                    print(f"Note: userData is not valid JSON, storing as string: {value}")
+                    obj[new_prefix] = value
+            # Special handling for dimensions
             elif key == "dimensions" and isinstance(value, dict):
-                x, y, z = value.get('x', 0), value.get('y', 0), value.get('z', 0)
-                blender_dims = coordinate_utils.vircadia_to_blender_dimensions(x, y, z)
+                blender_dims = coordinate_utils.vircadia_to_blender_dimensions(
+                    value.get('x', 0), value.get('y', 0), value.get('z', 0)
+                )
+                obj.dimensions = blender_dims
+                # Still set custom properties for compatibility
                 for axis, axis_value in zip(['x', 'y', 'z'], blender_dims):
-                    set_custom_properties(obj, axis_value, f"{new_prefix}_{axis}")
+                    obj[f"{new_prefix}_{axis}"] = axis_value
             # No conversion for position in custom properties
             elif key in ["position", "rotation"] and isinstance(value, dict):
                 for axis, axis_value in value.items():
@@ -102,10 +120,13 @@ def update_blender_transform_from_properties(obj):
         vircadia_pos = (obj["position_x"], obj["position_y"], obj["position_z"])
         obj.location = coordinate_utils.vircadia_to_blender_coordinates(*vircadia_pos)
 
-    # Update dimensions (scale)
+    # Update dimensions
     if all(f"dimensions_{axis}" in obj for axis in ['x', 'y', 'z']):
-        vircadia_scale = (obj["dimensions_x"], obj["dimensions_y"], obj["dimensions_z"])
-        obj.scale = coordinate_utils.vircadia_to_blender_dimensions(*vircadia_scale)
+        vircadia_dims = (obj["dimensions_x"], obj["dimensions_y"], obj["dimensions_z"])
+        if obj.get("type") == "Web":
+            obj.dimensions = (vircadia_dims[0], vircadia_dims[2], 0.01)  # Web entities use Y as Z
+        else:
+            obj.dimensions = coordinate_utils.vircadia_to_blender_dimensions(*vircadia_dims)
 
     # Update rotation
     if all(f"rotation_{axis}" in obj for axis in ['x', 'y', 'z', 'w']):
@@ -113,61 +134,51 @@ def update_blender_transform_from_properties(obj):
         obj.rotation_mode = 'QUATERNION'
         obj.rotation_quaternion = coordinate_utils.vircadia_to_blender_rotation(*vircadia_rot)
 
-def create_property_update_handler(obj, prop_name):
-    def update_handler():
-        if prop_name.startswith('position'):
-            update_blender_transform_from_properties(obj)
-        elif prop_name.startswith('dimensions'):
-            update_blender_transform_from_properties(obj)
-        elif prop_name.startswith('rotation'):
-            update_blender_transform_from_properties(obj)
-        return obj[prop_name]
-    return update_handler
+def update_custom_properties_from_transform(obj):
+    # Update position custom properties
+    vircadia_pos = coordinate_utils.blender_to_vircadia_coordinates(*obj.location)
+    obj["position_x"] = vircadia_pos[0]
+    obj["position_y"] = vircadia_pos[1]
+    obj["position_z"] = vircadia_pos[2]
 
-def register_property_update_handlers(obj):
-    for prop_name in ['position_x', 'position_y', 'position_z',
-                      'dimensions_x', 'dimensions_y', 'dimensions_z',
-                      'rotation_x', 'rotation_y', 'rotation_z', 'rotation_w']:
-        if prop_name in obj:
-            update_handler = create_property_update_handler(obj, prop_name)
-            
-            # Remove existing driver if it exists
-            if obj.animation_data and obj.animation_data.drivers:
-                for dr in obj.animation_data.drivers:
-                    if dr.data_path == f'["{prop_name}"]':
-                        obj.animation_data.drivers.remove(dr)
-            
-            # Add new driver
-            dr = obj.driver_add(f'["{prop_name}"]').driver
-            dr.type = 'SCRIPTED'
-            dr.expression = f"{prop_name}_update()"
-            
-            # Add variable to driver
-            var = dr.variables.new()
-            var.name = prop_name
-            var.type = 'SINGLE_PROP'
-            var.targets[0].id = obj
-            var.targets[0].data_path = f'["{prop_name}"]'
-            
-            # Add function to driver namespace
-            bpy.app.driver_namespace[f"{prop_name}_update"] = update_handler
-            
+    # Update dimensions custom properties
+    if obj.get("type") == "Web":
+        obj["dimensions_x"] = obj.dimensions.x
+        obj["dimensions_y"] = obj.dimensions.z  # Web entities use Y as Z
+        obj["dimensions_z"] = 0.01
+    else:
+        vircadia_dims = coordinate_utils.blender_to_vircadia_dimensions(*obj.dimensions)
+        obj["dimensions_x"] = vircadia_dims[0]
+        obj["dimensions_y"] = vircadia_dims[1]
+        obj["dimensions_z"] = vircadia_dims[2]
+
+    # Update rotation custom properties
+    vircadia_rot = coordinate_utils.blender_to_vircadia_rotation(*obj.rotation_quaternion)
+    obj["rotation_x"] = vircadia_rot[0]
+    obj["rotation_y"] = vircadia_rot[1]
+    obj["rotation_z"] = vircadia_rot[2]
+    obj["rotation_w"] = vircadia_rot[3]
+
+def depsgraph_update_handler(scene):
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    for update in depsgraph.updates:
+        if isinstance(update.id, bpy.types.Object):
+            obj = update.id
+            if "name" in obj:  # Check if it's a Vircadia entity
+                if update.is_updated_transform:
+                    update_custom_properties_from_transform(obj)
+
 def load_handler(dummy):
     for obj in bpy.data.objects:
         if "name" in obj:
-            register_property_update_handlers(obj)
+            update_custom_properties_from_transform(obj)
 
 def register():
+    bpy.app.handlers.depsgraph_update_post.append(depsgraph_update_handler)
     bpy.app.handlers.load_post.append(load_handler)
 
 def unregister():
+    bpy.app.handlers.depsgraph_update_post.remove(depsgraph_update_handler)
     bpy.app.handlers.load_post.remove(load_handler)
-    for obj in bpy.data.objects:
-        if "name" in obj:
-            for prop_name in ['position_x', 'position_y', 'position_z',
-                              'dimensions_x', 'dimensions_y', 'dimensions_z',
-                              'rotation_x', 'rotation_y', 'rotation_z', 'rotation_w']:
-                if prop_name in obj:
-                    obj.property_unregister(prop_name)
-                    if f"{prop_name}_update" in obj:
-                        del obj[f"{prop_name}_update"]
+
+print("property_utils.py loaded")

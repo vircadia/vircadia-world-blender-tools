@@ -7,6 +7,8 @@ class VIRCADIA_PT_convert_to_vircadia(Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "Vircadia"
+    bl_options = {'DEFAULT_CLOSED'}
+    bl_order = 4
 
     @classmethod
     def poll(cls, context):

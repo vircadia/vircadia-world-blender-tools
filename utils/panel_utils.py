@@ -127,10 +127,15 @@ def draw_transform_properties(layout, obj):
     else:
         row.prop(obj, "rotation_euler", text="")
 
-    # Dimensions (Scale)
+    # Dimensions
     row = layout.row(align=True)
     row.label(text="Dimensions")
-    row.prop(obj, "scale", text="")
+    if obj.get("type") == "Web":
+        row.prop(obj, "dimensions", index=0, text="X")
+        row.prop(obj, "dimensions", index=1, text="Y")
+        row.prop(obj, "dimensions", index=2, text="Z")
+    else:
+        row.prop(obj, "dimensions", text="")
 
 def find_keylight(zone_obj):
     for child in zone_obj.children:

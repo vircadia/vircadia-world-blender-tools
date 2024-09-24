@@ -47,6 +47,7 @@
     "collisionSoundURL": "",
     "cloneDynamic": false,
     "cloneAvatarEntity": false,
+	"vircadia_script": "",
     "script": "",
     "serverScripts": "",
     "color": {

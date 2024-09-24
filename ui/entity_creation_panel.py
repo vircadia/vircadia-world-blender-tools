@@ -34,6 +34,8 @@ class VIRCADIA_PT_entity_creation(Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "Vircadia"
+    bl_options = {'DEFAULT_CLOSED'}
+    bl_order = 3
 
     def draw(self, context):
         layout = self.layout

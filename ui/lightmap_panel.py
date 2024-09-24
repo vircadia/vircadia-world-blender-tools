@@ -9,8 +9,8 @@ class VIRCADIA_PT_lightmap_panel(Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "Vircadia"
-    bl_parent_id = "VIEW3D_PT_vircadia_main"
     bl_options = {'DEFAULT_CLOSED'}
+    bl_order = 1
 
     @classmethod
     def poll(cls, context):
@@ -23,7 +23,7 @@ class VIRCADIA_PT_lightmap_panel(Panel):
         # Lightmap configuration
         box = layout.box()
         box.label(text="Lightmap Configuration")
-        box.prop(scene, "vircadia_lightmap_color_space", text="Color Space")
+        # box.prop(scene, "vircadia_lightmap_color_space", text="Color Space")
         box.prop(scene, "vircadia_lightmap_texel_density", text="Texel Density")
         box.prop(scene, "vircadia_lightmap_min_resolution", text="Min Resolution")
         box.prop(scene, "vircadia_lightmap_max_resolution", text="Max Resolution")
@@ -36,11 +36,11 @@ class VIRCADIA_PT_lightmap_panel(Panel):
         # Bake settings
         box = layout.box()
         box.label(text="Bake Settings")
-        box.prop(scene, "vircadia_lightmap_bake_type", text="Bake Type")
+        # box.prop(scene, "vircadia_lightmap_bake_type", text="Bake Type")
         box.prop(scene, "vircadia_lightmap_use_pass_direct", text="Use Direct")
         box.prop(scene, "vircadia_lightmap_use_pass_indirect", text="Use Indirect")
-        box.prop(scene, "vircadia_lightmap_use_pass_color", text="Use Color")
-        box.prop(scene, "vircadia_lightmap_use_clear", text="Clear")
+        # box.prop(scene, "vircadia_lightmap_use_pass_color", text="Use Color")
+        # box.prop(scene, "vircadia_lightmap_use_clear", text="Clear")
         box.prop(scene, "vircadia_lightmap_use_adaptive_sampling", text="Adaptive Sampling")
         box.prop(scene, "vircadia_lightmap_adaptive_threshold", text="Adaptive Threshold")
         box.prop(scene, "vircadia_lightmap_samples", text="Samples")
@@ -117,9 +117,9 @@ def register():
     bpy.types.Scene.vircadia_lightmap_uv_type = EnumProperty(
         name="UV Type",
         items=[
-            ('LIGHTMAP_PACK', "Lightmap Pack", "Use Lightmap Pack for UV unwrapping"),
-            ('SMART_UV_PROJECT', "Smart UV Project", "Use Smart UV Project for UV unwrapping"),
-            ('UNWRAP', "Unwrap", "Use regular Unwrap for UV unwrapping")
+            ('LIGHTMAP_PACK', "Lightmap Pack", "Best for buildings and hard bodies"),
+            ('SMART_UV_PROJECT', "Smart UV Project", "Quick but less efficient"),
+            ('UNWRAP', "Unwrap", "Soft bodies and manually unwrapped objects")
         ],
         default='LIGHTMAP_PACK',
         description="Choose the UV unwrapping method for lightmap generation"

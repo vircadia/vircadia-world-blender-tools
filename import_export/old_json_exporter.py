@@ -63,12 +63,21 @@ def get_vircadia_entity_data(obj, content_path):
     entity_data["type"] = entity_type
     entity_data["name"] = obj.get("name", "")
 
-    # Convert coordinates for Zone entities
-    if entity_type.lower() == "zone":
+    # Convert coordinates for Zone and Web entities
+    if entity_type.lower() in ["zone", "web"]:
         entity_data["position"] = coordinate_utils.blender_to_vircadia_coordinates(*obj.location)
-        entity_data["dimensions"] = coordinate_utils.blender_to_vircadia_dimensions(*obj.scale)
         entity_data["rotation"] = coordinate_utils.blender_to_vircadia_rotation(*obj.rotation_quaternion)
-    else:
+        
+        # Special handling for Web entity dimensions
+        if entity_type.lower() == "web":
+            entity_data["dimensions"] = {
+                "x": obj.dimensions.x,
+                "y": obj.dimensions.y,
+                "z": 0.01  # Fixed Z dimension for web panels
+            }
+        else:
+            entity_data["dimensions"] = coordinate_utils.blender_to_vircadia_dimensions(*obj.dimensions)
+    elif entity_type.lower() == "model":
         entity_data["position"] = {
             "x": obj.location.x,
             "y": obj.location.y,
@@ -78,6 +87,23 @@ def get_vircadia_entity_data(obj, content_path):
             "x": obj.scale.x,
             "y": obj.scale.y,
             "z": obj.scale.z
+        }
+        entity_data["rotation"] = {
+            "x": obj.rotation_quaternion.x,
+            "y": obj.rotation_quaternion.y,
+            "z": obj.rotation_quaternion.z,
+            "w": obj.rotation_quaternion.w
+        }
+    else:
+        entity_data["position"] = {
+            "x": obj.location.x,
+            "y": obj.location.y,
+            "z": obj.location.z
+        }
+        entity_data["dimensions"] = {
+            "x": obj.dimensions.x,
+            "y": obj.dimensions.y,
+            "z": obj.dimensions.z
         }
         entity_data["rotation"] = {
             "x": obj.rotation_quaternion.x,
@@ -152,12 +178,13 @@ def has_model_entities():
     def is_collision_object(obj):
         return any(keyword in obj.name.lower() for keyword in collision_keywords)
     
-    def is_zone_entity(obj):
-        return obj.get("type", "").lower() == "zone"
+    def is_excluded_entity(obj):
+        excluded_types = ["zone", "web", "light", "image", "text", "shape"]  # Add more types here as needed
+        return obj.get("type", "").lower() in excluded_types
     
     return any(
         obj.type == 'MESH' and
-        not is_zone_entity(obj) and
+        not is_excluded_entity(obj) and
         not is_collision_object(obj)
         for obj in bpy.data.objects
     )

@@ -175,12 +175,19 @@ class VIRCADIA_OT_create_entity(Operator):
         return obj
 
     def create_web_object(self, entity):
-        bpy.ops.object.select_all(action='DESELECT')
         bpy.ops.mesh.primitive_plane_add()
-
         obj = bpy.context.active_object
         obj.name = "Web"
         entity["name"] = "Web"
+
+        # Convert template dimensions to Blender coordinates
+        if "dimensions" in entity:
+            blender_dims = coordinate_utils.vircadia_to_blender_dimensions(
+                entity["dimensions"]["x"],
+                entity["dimensions"]["y"],
+                entity["dimensions"]["z"]
+            )
+            obj.dimensions = blender_dims
 
         self.set_object_properties(obj, entity)
         return obj
