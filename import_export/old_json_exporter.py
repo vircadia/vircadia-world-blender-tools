@@ -250,31 +250,9 @@ def export_vircadia_json(context, filepath):
         print(f"Vircadia JSON exported successfully to {filepath}")
     finally:
         visibility_utils.restore_hidden_objects(hidden_objects)
-
-class EXPORT_OT_vircadia_json(bpy.types.Operator):
-    bl_idname = "export_scene.vircadia_json"
-    bl_label = "Export Vircadia JSON"
-    filepath: bpy.props.StringProperty(subtype="FILE_PATH")
-
-    def execute(self, context):
-        if not self.filepath:
-            blend_filepath = context.blend_data.filepath
-            if not blend_filepath:
-                blend_filepath = "untitled"
-            else:
-                blend_filepath = os.path.splitext(blend_filepath)[0]
-            self.filepath = os.path.join(os.path.dirname(blend_filepath), config.DEFAULT_JSON_EXPORT_FILENAME)
-
-        export_vircadia_json(context, self.filepath)
-        return {'FINISHED'}
-
-    def invoke(self, context, event):
-        self.filepath = config.DEFAULT_JSON_EXPORT_FILENAME
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
-
+        
 def register():
-    bpy.utils.register_class(EXPORT_OT_vircadia_json)
+    pass
 
 def unregister():
-    bpy.utils.unregister_class(EXPORT_OT_vircadia_json)
+    pass
