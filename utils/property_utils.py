@@ -2,7 +2,7 @@ import bpy
 import json
 from . import coordinate_utils
 
-# List of properties to skip
+# List of custom properties to skip
 skip_properties = {
     "DataVersion",
     "Version",

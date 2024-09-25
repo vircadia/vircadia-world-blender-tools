@@ -29,12 +29,12 @@ PROPERTY_GROUPS = {
     "animation": "Animation",
 }
 
-def draw_custom_properties(context, layout, obj):
+def draw_custom_properties(context, layout, obj, panel_hidden_properties):
     grouped_properties = {group: {} for group in set(PROPERTY_GROUPS.values())}
     grouped_properties["Misc"] = {}
 
     for key in sorted(obj.keys()):
-        if property_utils.should_filter_property(key):
+        if property_utils.should_filter_property(key) or key in panel_hidden_properties:
             continue
 
         # Skip the old keylight properties

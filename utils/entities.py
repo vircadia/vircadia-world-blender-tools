@@ -1,5 +1,5 @@
 
-ENTITY_TYPES = [
+ALL_ENTITY_TYPES = [
     "model",
     "shape",
     "light",
@@ -18,3 +18,11 @@ ENTITY_TEMPLATES_JSON = {
     "zone": "template_zone.json",
     "image": "template_image.json",
 }
+
+def get_filtered_entity_types():
+    # List of entity types to exclude
+    excluded_types = ["particle", "image", "shape", "light"]  # Add any types you want to exclude here
+    return [t for t in ALL_ENTITY_TYPES if t not in excluded_types]
+
+# Use this function to get the filtered list of entity types
+ENTITY_TYPES = get_filtered_entity_types()

@@ -2,6 +2,66 @@ import bpy
 from bpy.types import Panel
 from ..utils import property_utils, panel_utils
 
+# List of properties to hide from "Entity Properties" panel.
+panel_hidden_properties = {
+    "id",
+    "type",
+    "parentID",
+    "clientOnly",
+    "owningAvatarID",
+    "created",
+    "lastEdited",
+    "lastEditedBy",
+    "queryAACube",
+    "registrationPoint",
+    "renderInfo",
+    "angularDamping",
+    "damping",
+    "restitution",
+    "friction",
+    "density",
+    "lifetime",
+    "collisionMask",
+    "collidesWith",
+    "ignoreForCollisions",
+    "collisionless",
+    "dynamic",
+    "localPosition",
+    "localRotation",
+    "boundingBox",
+    "originalTextures",
+    "animation",
+    "userData",
+    "cloneable",
+    "cloneLifetime",
+    "cloneDynamic",
+    "cloneAvatarEntity",
+    "canCastShadow",
+    "blendshapeCoefficients",
+    "angularDamping",
+    "animation_currentFrame",
+    "animation_firstFrame",
+    "animation_fps",
+    "animation_url",
+    "animation_lastFrame",
+    "groupCulled",
+    "href",
+    "textures",
+    "useOriginalPivot,"
+    "id",
+    "compoundShapeURL",
+    "script",
+    "serverScripts",
+    "collisionSoundURL",
+    "modelURL",
+    "shapeType",
+    "useOriginalPivot",
+    "collisionsWillMove",
+    "ignorePickIntersection",
+    
+    # Add any other properties you want to hide in the panel but keep as custom properties
+}
+
 class VIRCADIA_PT_custom_properties(Panel):
     bl_label = "Entity Properties"
     bl_idname = "VIEW3D_PT_vircadia_custom_properties"
@@ -25,7 +85,7 @@ class VIRCADIA_PT_custom_properties(Panel):
         # Check for Vircadia-specific properties
         has_vircadia_props = False
         for prop in obj.keys():
-            if not property_utils.should_filter_property(prop):
+            if not property_utils.should_filter_property(prop) and prop not in panel_hidden_properties:
                 has_vircadia_props = True
                 break
         
@@ -43,7 +103,7 @@ class VIRCADIA_PT_custom_properties(Panel):
 
         layout.label(text=f"{custom_name}")
 
-        panel_utils.draw_custom_properties(context, layout, obj)
+        panel_utils.draw_custom_properties(context, layout, obj, panel_hidden_properties)
 
 def register():
     bpy.utils.register_class(VIRCADIA_PT_custom_properties)

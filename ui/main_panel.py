@@ -348,13 +348,13 @@ def register():
         name="Hide Collisions",
         description="Hide collision objects",
         default=True,
-        update=update_visibility
+        update=update_hide_collisions
     )
     bpy.types.Scene.vircadia_collisions_wireframe = BoolProperty(
         name="Collisions as Wireframe",
         description="Display collision objects as wireframe",
         default=False,
-        update=update_visibility
+        update=update_collisions_wireframe
     )
     bpy.types.Scene.vircadia_hide_lod_levels = BoolProperty(
         name="Hide LOD Levels",
@@ -380,6 +380,16 @@ def register():
         default=True
     )
     bpy.utils.register_class(VIRCADIA_PT_main_panel)
+    
+def update_hide_collisions(self, context):
+    if self.vircadia_hide_collisions:
+        self.vircadia_collisions_wireframe = False
+    update_visibility(self, context)
+
+def update_collisions_wireframe(self, context):
+    if self.vircadia_collisions_wireframe:
+        self.vircadia_hide_collisions = False
+    update_visibility(self, context)
 
 def unregister():
     bpy.utils.unregister_class(VIRCADIA_PT_main_panel)
