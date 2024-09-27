@@ -51,18 +51,40 @@ def is_sun_light(obj):
 def is_other_light(obj):
     return obj.type == 'LIGHT' and obj.data.type in ['POINT', 'SPOT', 'AREA']
 
+# Updated to treat Zone and Web as custom properties
+def is_zone_object(obj):
+    # Check if the object has a custom property "type" with the value "Zone"
+    return obj.type == 'MESH' and obj.get('type') == 'Zone'
+
+def is_web_object(obj):
+    # Check if the object has a custom property "type" with the value "Web"
+    return obj.type == 'MESH' and obj.get('type') == 'Web'
+
 def vircadia_lightmap_data_exists():
     return "vircadia_lightmapData" in bpy.data.objects
 
 def should_hide_in_main_export(obj):
+    # Hide collision objects, keylight, sun, other lights, zones, and web objects
     if is_collision_or_child_of_collision(obj) or is_keylight_object(obj) or is_sun_light(obj):
         return True
     if vircadia_lightmap_data_exists() and is_other_light(obj):
+        return True
+    # Hide Zone and Web custom property objects
+    if is_zone_object(obj) or is_web_object(obj):
         return True
     return False
 
 def export_glb(context, filepath):
     print(f"Starting GLB export to {filepath}")
+
+    # Store the original hide lightmaps state
+    original_hide_lightmaps = context.scene.vircadia_hide_lightmaps
+
+    # If hide lightmaps is False, set it to True
+    if not original_hide_lightmaps:
+        context.scene.vircadia_hide_lightmaps = True
+        print("Hide lightmaps set to True for export")
+
     directory = os.path.dirname(filepath)
     filename = config.DEFAULT_GLB_EXPORT_FILENAME
     filepath = os.path.join(directory, filename)
@@ -137,12 +159,16 @@ def export_glb(context, filepath):
         context.scene.vircadia_hide_armatures = original_armature_state
         visibility_utils.update_visibility(context.scene, context)
         visibility_utils.restore_hidden_objects(hidden_objects)
-        print("Restored original visibility states")
+
+        # Restore the original hide lightmaps state
+        context.scene.vircadia_hide_lightmaps = original_hide_lightmaps
+        print(f"Hide lightmaps reset to its original state: {original_hide_lightmaps}")
 
     print("GLB export completed.")
 
+# Add register and unregister functions to avoid the attribute error
 def register():
-    pass
+    print("gltf_exporter registered")
 
 def unregister():
-    pass
+    print("gltf_exporter unregistered")

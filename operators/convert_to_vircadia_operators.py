@@ -4,12 +4,6 @@ import os
 from bpy.types import Operator
 from ..utils import property_utils, collection_utils, entities
 
-import bpy
-import json
-import os
-from bpy.types import Operator
-from ..utils import property_utils, collection_utils, entities
-
 class VIRCADIA_OT_convert_to_vircadia(Operator):
     bl_idname = "vircadia.convert_to_vircadia"
     bl_label = "Convert to Vircadia"
@@ -28,8 +22,8 @@ class VIRCADIA_OT_convert_to_vircadia(Operator):
             # Get the first entity from the template
             entity = template["Entities"][0]
             
-            # Set custom properties
-            property_utils.set_custom_properties(obj, entity)
+            # Set initial properties
+            property_utils.set_initial_properties(obj, entity)
             
             # Set the "name" custom property to the Blender object's name
             obj["name"] = obj.name
@@ -40,6 +34,9 @@ class VIRCADIA_OT_convert_to_vircadia(Operator):
             # Move the object to the appropriate collection
             self.move_to_type_collection(obj, "Model")
             
+            # The update logic is already handled by the depsgraph update handler
+            # No need to add callbacks manually here
+
             self.report({'INFO'}, f"Converted {obj.name} to Vircadia entity")
             return {'FINISHED'}
         else:
@@ -93,17 +90,6 @@ class VIRCADIA_OT_selected_to_collision(Operator):
     @classmethod
     def poll(cls, context):
         return any(obj.type == 'MESH' for obj in context.selected_objects)
-
-def register():
-    bpy.utils.register_class(VIRCADIA_OT_convert_to_vircadia)
-    bpy.utils.register_class(VIRCADIA_OT_selected_to_collision)
-
-def unregister():
-    bpy.utils.unregister_class(VIRCADIA_OT_selected_to_collision)
-    bpy.utils.unregister_class(VIRCADIA_OT_convert_to_vircadia)
-
-if __name__ == "__main__":
-    register()
 
 def register():
     bpy.utils.register_class(VIRCADIA_OT_convert_to_vircadia)

@@ -3,7 +3,7 @@ from mathutils import Vector, Quaternion
 
 def vircadia_to_blender_coordinates(x, y, z):
     # Convert from Y-up to Z-up
-    return x, z, y
+    return x, z, -y
 
 def vircadia_to_blender_dimensions(x, y, z):
     # Convert dimensions from Y-up to Z-up
@@ -11,7 +11,7 @@ def vircadia_to_blender_dimensions(x, y, z):
 
 def blender_to_vircadia_coordinates(x, y, z):
     # Convert from Z-up to Y-up
-    return x, z, y
+    return x, -z, y
 
 def blender_to_vircadia_dimensions(x, y, z):
     # Convert dimensions from Z-up to Y-up
@@ -19,9 +19,9 @@ def blender_to_vircadia_dimensions(x, y, z):
 
 def vircadia_to_blender_rotation(x, y, z, w):
     # Convert quaternion from Y-up to Z-up
-    return Quaternion((w, x, z, -y))
+    return Quaternion((w, x, -z, y))
 
-def blender_to_vircadia_rotation(w, x, y, z):
+def blender_to_vircadia_rotation(x, y, z, w):
     # Convert quaternion from Z-up to Y-up
     return x, -z, y, w
 

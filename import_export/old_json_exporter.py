@@ -41,14 +41,17 @@ def update_template_properties(template, custom_props):
                 if "Mode" in prop_key and prop_key.lower() != "model":
                     template[key] = "enabled" if custom_props[prop_key] else "disabled"
                 else:
-                    template[key] = custom_props[prop_key]
+                    # Only update the property if it's not already set
+                    if template[key] == "" or template[key] is None:
+                        template[key] = custom_props[prop_key]
             else:
                 for custom_key in custom_props:
                     if custom_key.endswith(f"_{key}"):
                         if "Mode" in custom_key and custom_key.lower() != "model":
                             template[key] = "enabled" if custom_props[custom_key] else "disabled"
                         else:
-                            template[key] = custom_props[custom_key]
+                            if template[key] == "" or template[key] is None:
+                                template[key] = custom_props[custom_key]
                         break
 
 def get_vircadia_entity_data(obj, content_path):
@@ -63,57 +66,85 @@ def get_vircadia_entity_data(obj, content_path):
     entity_data["type"] = entity_type
     entity_data["name"] = obj.get("name", "")
 
-    # Convert coordinates for Zone and Web entities
-    if entity_type.lower() in ["zone", "web"]:
-        entity_data["position"] = coordinate_utils.blender_to_vircadia_coordinates(*obj.location)
-        entity_data["rotation"] = coordinate_utils.blender_to_vircadia_rotation(*obj.rotation_quaternion)
-        
-        # Special handling for Web entity dimensions
-        if entity_type.lower() == "web":
-            entity_data["dimensions"] = {
-                "x": obj.dimensions.x,
-                "y": obj.dimensions.y,
-                "z": 0.01  # Fixed Z dimension for web panels
-            }
-        else:
-            entity_data["dimensions"] = coordinate_utils.blender_to_vircadia_dimensions(*obj.dimensions)
-    elif entity_type.lower() == "model":
+    # Get all custom properties
+    custom_props = property_utils.get_custom_properties(obj)
+    print(f"Custom properties for {obj.name}: {custom_props}")  # Debugging print statement
+
+    # Handle position, rotation, and dimensions
+    if entity_type.lower() == "web":
+        # Handle Web entity with conversion
+        position = coordinate_utils.blender_to_vircadia_coordinates(
+            custom_props.get("position_x", 0.0),
+            custom_props.get("position_y", 0.0),
+            custom_props.get("position_z", 0.0)
+        )
+        entity_data["position"] = {
+            "x": position[0],
+            "y": position[1],
+            "z": position[2]
+        }
+
+        rotation = coordinate_utils.blender_to_vircadia_rotation(
+            custom_props.get("rotation_x", 0.0),
+            custom_props.get("rotation_y", 0.0),
+            custom_props.get("rotation_z", 0.0),
+            custom_props.get("rotation_w", 1.0)
+        )
+        entity_data["rotation"] = {
+            "x": rotation[0],
+            "y": rotation[1],
+            "z": rotation[2],
+            "w": rotation[3]
+        }
+
+        # For Web entities, we only care about X and Y dimensions
+        entity_data["dimensions"] = {
+            "x": custom_props.get("dimensions_x", 1.0),
+            "y": custom_props.get("dimensions_y", 1.0),
+            "z": 0.01  # Fixed thickness for web panels
+        }
+    elif entity_type.lower() == "zone":
+        # Handle Zone entity without conversion
         entity_data["position"] = {
             "x": obj.location.x,
             "y": obj.location.y,
             "z": obj.location.z
         }
-        entity_data["dimensions"] = {
-            "x": obj.scale.x,
-            "y": obj.scale.y,
-            "z": obj.scale.z
-        }
+        
         entity_data["rotation"] = {
             "x": obj.rotation_quaternion.x,
             "y": obj.rotation_quaternion.y,
             "z": obj.rotation_quaternion.z,
             "w": obj.rotation_quaternion.w
         }
-    else:
-        entity_data["position"] = {
-            "x": obj.location.x,
-            "y": obj.location.y,
-            "z": obj.location.z
-        }
+        
         entity_data["dimensions"] = {
             "x": obj.dimensions.x,
             "y": obj.dimensions.y,
             "z": obj.dimensions.z
         }
-        entity_data["rotation"] = {
-            "x": obj.rotation_quaternion.x,
-            "y": obj.rotation_quaternion.y,
-            "z": obj.rotation_quaternion.z,
-            "w": obj.rotation_quaternion.w
+    else:
+        # Handle other entity types
+        position = coordinate_utils.blender_to_vircadia_coordinates(*obj.location)
+        entity_data["position"] = {
+            "x": position[0],
+            "y": position[1],
+            "z": position[2]
         }
-
-    # Get all custom properties
-    custom_props = property_utils.get_custom_properties(obj)
+        
+        entity_data["dimensions"] = {
+            "x": obj.dimensions.x,
+            "y": obj.dimensions.y,
+            "z": obj.dimensions.z
+        }
+        
+        rotation = coordinate_utils.blender_to_vircadia_rotation(*obj.rotation_quaternion)
+        entity_data["rotation"] = {
+            "x": rotation[0],
+            "y": rotation[1],
+            "z": rotation[2],
+            "w": rotation[3]
+        }
 
     # Update template properties with custom properties
     update_template_properties(entity_data, custom_props)
@@ -194,6 +225,11 @@ def has_collision_objects():
     return any(any(keyword in obj.name.lower() for keyword in collision_keywords) for obj in bpy.data.objects)
 
 def export_vircadia_json(context, filepath):
+    # First, trigger the "Force Update Properties" operator
+    bpy.ops.vircadia.force_update()
+    print("Forced update of properties before export")
+
+    # Continue with the export process
     scene = context.scene
     content_path = scene.vircadia_content_path
 
@@ -210,9 +246,11 @@ def export_vircadia_json(context, filepath):
         "Version": 133
     }
 
+    # Temporarily unhide hidden objects for export
     hidden_objects = visibility_utils.temporarily_unhide_objects(context)
 
     try:
+        # Iterate over all objects in the scene
         for obj in bpy.data.objects:
             if "type" in obj:
                 entity_type = obj["type"].lower()
@@ -240,15 +278,20 @@ def export_vircadia_json(context, filepath):
             collision_model_entity["visible"] = False
             scene_data["Entities"].append(collision_model_entity)
 
+        # Replace placeholder UUIDs in the scene data
         replace_placeholder_uuid(scene_data)
 
+        # Ensure the directory for the output file exists
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
 
+        # Write the scene data to the specified JSON file
         with open(filepath, 'w') as f:
             json.dump(scene_data, f, cls=VircadiaJSONEncoder, indent=4)
 
         print(f"Vircadia JSON exported successfully to {filepath}")
+
     finally:
+        # Restore the visibility of any objects that were hidden before the export
         visibility_utils.restore_hidden_objects(hidden_objects)
         
 def register():

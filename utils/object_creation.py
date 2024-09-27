@@ -1,7 +1,7 @@
 import bpy
 import os
 from mathutils import Vector
-from . import coordinate_utils, collection_utils
+from . import coordinate_utils, collection_utils, property_utils
 
 def extract_filename_from_url(url):
     return os.path.basename(url)
@@ -18,8 +18,6 @@ def get_blender_object_type(vircadia_type):
         "particle": "EMPTY",
     }
     return type_mapping.get(vircadia_type.lower(), "EMPTY")
-
-# In utils/object_creation.py
 
 def create_blender_object(entity):
     vircadia_type = entity.get("type", "").lower()
@@ -93,8 +91,8 @@ def create_blender_object(entity):
             # Default dimensions if not specified in the entity data
             obj.dimensions = (1, 1, 0.01)
 
-    # Add update handler for transform synchronization
-    bpy.app.handlers.depsgraph_update_post.append(create_transform_update_handler(obj))
+    # Set initial custom properties
+    property_utils.set_initial_properties(obj, entity)
 
     print(f"Created object: {obj.name} with custom name: {obj['name']}")
     return obj
@@ -103,30 +101,7 @@ def create_transform_update_handler(obj):
     def transform_update_handler(scene):
         if obj is None or obj.name not in bpy.data.objects:
             return
-
-        # Update position
-        vircadia_pos = coordinate_utils.blender_to_vircadia_coordinates(*obj.location)
-        obj["position_x"] = vircadia_pos[0]
-        obj["position_y"] = vircadia_pos[1]
-        obj["position_z"] = vircadia_pos[2]
-
-        # Update dimensions
-        vircadia_dims = coordinate_utils.blender_to_vircadia_dimensions(*obj.dimensions)
-        obj["dimensions_x"] = vircadia_dims[0]
-        obj["dimensions_y"] = vircadia_dims[1]
-        obj["dimensions_z"] = vircadia_dims[2]
-
-        # Update rotation
-        if obj.rotation_mode == 'QUATERNION':
-            vircadia_rot = coordinate_utils.blender_to_vircadia_rotation(*obj.rotation_quaternion)
-        else:
-            vircadia_rot = coordinate_utils.blender_to_vircadia_rotation(*obj.rotation_euler.to_quaternion())
-        
-        obj["rotation_x"] = vircadia_rot[0]
-        obj["rotation_y"] = vircadia_rot[1]
-        obj["rotation_z"] = vircadia_rot[2]
-        obj["rotation_w"] = vircadia_rot[3]
-
+        property_utils.update_custom_properties_from_transform(obj)
     return transform_update_handler
 
 def keylight_transform_update_handler(scene):
@@ -138,15 +113,8 @@ def keylight_transform_update_handler(scene):
             zone_obj["keyLight_direction_y"] = direction.y
             zone_obj["keyLight_direction_z"] = direction.z
 
-def transform_update_handler(scene):
-    for obj in bpy.data.objects:
-        if "name" in obj:
-            create_transform_update_handler(obj)(scene)
-
 def register():
-    bpy.app.handlers.depsgraph_update_post.append(transform_update_handler)
     bpy.app.handlers.depsgraph_update_post.append(keylight_transform_update_handler)
 
 def unregister():
     bpy.app.handlers.depsgraph_update_post.remove(keylight_transform_update_handler)
-    bpy.app.handlers.depsgraph_update_post.remove(transform_update_handler)

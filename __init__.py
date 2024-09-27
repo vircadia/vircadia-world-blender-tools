@@ -22,12 +22,7 @@ def register():
     operators.register()
     lightmap.register()
 
-    # Register the transform update handler
-    bpy.app.handlers.depsgraph_update_post.append(utils.object_creation.transform_update_handler)
-
 def unregister():
-    # Unregister the transform update handler
-    bpy.app.handlers.depsgraph_update_post.remove(utils.object_creation.transform_update_handler)
 
     lightmap.unregister()
     operators.unregister()

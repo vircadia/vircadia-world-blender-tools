@@ -81,7 +81,14 @@ class VIRCADIA_OT_create_entity(Operator):
         elif entity["type"].lower() == "zone":
             return self.create_zone_object(entity, context)
         else:
-            return object_creation.create_blender_object(entity)
+            obj = object_creation.create_blender_object(entity)
+            if obj:
+                # Add update callback to location, rotation, and scale properties
+                obj.location.update_callback = property_utils.custom_property_update
+                obj.rotation_euler.update_callback = property_utils.custom_property_update
+                obj.rotation_quaternion.update_callback = property_utils.custom_property_update
+                obj.scale.update_callback = property_utils.custom_property_update
+            return obj
 
     def create_shape_object(self, entity, shape_type):
         bpy.ops.object.select_all(action='DESELECT')

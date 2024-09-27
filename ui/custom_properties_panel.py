@@ -47,7 +47,7 @@ panel_hidden_properties = {
     "groupCulled",
     "href",
     "textures",
-    "useOriginalPivot,"
+    "useOriginalPivot",
     "id",
     "compoundShapeURL",
     "script",
@@ -104,6 +104,9 @@ class VIRCADIA_PT_custom_properties(Panel):
         layout.label(text=f"{custom_name}")
 
         panel_utils.draw_custom_properties(context, layout, obj, panel_hidden_properties)
+
+        # Add a button to force update custom properties
+        layout.operator("vircadia.force_update", text="Force Update Properties")
 
 def register():
     bpy.utils.register_class(VIRCADIA_PT_custom_properties)
