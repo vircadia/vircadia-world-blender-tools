@@ -5,13 +5,13 @@ def vircadia_to_blender_coordinates(x, y, z):
     # Convert from Y-up to Z-up
     return x, z, -y
 
-def vircadia_to_blender_dimensions(x, y, z):
-    # Convert dimensions from Y-up to Z-up
-    return x, z, y
-
 def blender_to_vircadia_coordinates(x, y, z):
     # Convert from Z-up to Y-up
     return x, -z, y
+
+def vircadia_to_blender_dimensions(x, y, z):
+    # Convert dimensions from Y-up to Z-up
+    return x, z, y
 
 def blender_to_vircadia_dimensions(x, y, z):
     # Convert dimensions from Z-up to Y-up
@@ -23,7 +23,7 @@ def vircadia_to_blender_rotation(x, y, z, w):
 
 def blender_to_vircadia_rotation(x, y, z, w):
     # Convert quaternion from Z-up to Y-up
-    return x, -z, y, w
+    return Quaternion((x, -z, y, w))
 
 def euler_to_quaternion(roll, pitch, yaw):
     # Convert Euler angles to quaternion
