@@ -44,6 +44,10 @@ def update_template_properties(template, custom_props):
                     # Only update the property if it's not already set
                     if template[key] == "" or template[key] is None:
                         template[key] = custom_props[prop_key]
+            elif key == "vircadia_script":
+                # Always update vircadia_script if it exists in custom_props
+                if "vircadia_script" in custom_props:
+                    template[key] = custom_props["vircadia_script"]
             else:
                 for custom_key in custom_props:
                     if custom_key.endswith(f"_{key}"):
@@ -176,6 +180,10 @@ def get_vircadia_entity_data(obj, content_path):
 
         if user_data:
             entity_data["userData"] = json.dumps(user_data)
+
+    # Add vircadia_script as a custom property if it exists in the entity data
+    if "vircadia_script" in entity_data:
+        obj["vircadia_script"] = entity_data["vircadia_script"]
 
     return entity_data
 

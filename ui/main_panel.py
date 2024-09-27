@@ -199,15 +199,6 @@ class VIRCADIA_OT_show_warning(Operator):
     def draw(self, context):
         self.layout.label(text=self.message)
 
-class VIRCADIA_OT_paste_content_path(Operator):
-    bl_idname = "vircadia.paste_content_path"
-    bl_label = "Paste"
-    bl_description = "Paste content path from clipboard"
-
-    def execute(self, context):
-        context.scene.vircadia_content_path = bpy.context.window_manager.clipboard
-        return {'FINISHED'}
-
 class VIRCADIA_OT_convert_collisions(Operator):
     bl_idname = "vircadia.convert_collisions"
     bl_label = "Convert Collisions To Vircadia"
@@ -335,7 +326,6 @@ class VIRCADIA_PT_main_panel(Panel):
         box.prop(scene, "vircadia_hide_lightmaps", text="Hide Lightmaps")
 
 def register():
-    bpy.utils.register_class(VIRCADIA_OT_paste_content_path)
     bpy.utils.register_class(VIRCADIA_OT_convert_collisions)
     bpy.utils.register_class(VIRCADIA_OT_process_lod)
     bpy.utils.register_class(VIRCADIA_OT_show_warning)
@@ -396,7 +386,6 @@ def unregister():
     bpy.utils.unregister_class(VIRCADIA_OT_show_warning)
     bpy.utils.unregister_class(VIRCADIA_OT_process_lod)
     bpy.utils.unregister_class(VIRCADIA_OT_convert_collisions)
-    bpy.utils.unregister_class(VIRCADIA_OT_paste_content_path)
     del bpy.types.Scene.vircadia_hide_collisions
     del bpy.types.Scene.vircadia_collisions_wireframe
     del bpy.types.Scene.vircadia_hide_lod_levels

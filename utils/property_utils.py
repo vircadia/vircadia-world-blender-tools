@@ -36,13 +36,18 @@ skip_properties = {
     "angularDamping"
     "animation_currentFrame"
     "animation_firstFrame"
-    "animation_fps"
+    "animation_fps",
+    "keyLight_intensity",
+    "keyLight_direction_x",
+    "keyLight_direction_y",
+    "keyLight_direction_z",
 }
 
 def should_filter_property(key):
     # Ignore ANT Landscape plugin properties and properties in the skip list
     return (key.startswith("ant_") or 
             key.startswith("Ant_") or 
+            key.startswith("keyLight_color_") or 
             key in skip_properties)
 
 def set_custom_properties(obj, data, prefix="", skip_transform=False):

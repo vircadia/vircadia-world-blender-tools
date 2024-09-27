@@ -1,6 +1,7 @@
 import bpy
 from mathutils import Vector
 from ..utils import property_utils
+from ..operators.clipboard_operators import VIRCADIA_OT_paste_condense_script
 
 PROPERTY_GROUPS = {
     "position": "Transform",
@@ -35,10 +36,6 @@ def draw_custom_properties(context, layout, obj, panel_hidden_properties):
 
     for key in sorted(obj.keys()):
         if property_utils.should_filter_property(key) or key in panel_hidden_properties:
-            continue
-
-        # Skip the old keylight properties
-        if key.startswith("keyLight_color_") or key in ["keyLight_intensity", "keyLight_direction_x", "keyLight_direction_y", "keyLight_direction_z"]:
             continue
 
         group = "Misc"
@@ -84,6 +81,14 @@ def draw_custom_properties(context, layout, obj, panel_hidden_properties):
 
             if group == "Lighting" and obj.get("type") == "Zone":
                 draw_keylight_properties(box, obj)
+
+    # Special handling for vircadia_script
+    if "vircadia_script" in obj:
+        script_box = layout.box()
+        script_box.label(text="Vircadia Script")
+        row = script_box.row()
+        row.prop(obj, '["vircadia_script"]', text="")
+        row.operator("vircadia.paste_condense_script", text="", icon='PASTEDOWN')
 
 def draw_property(box, obj, prop_name, full_prop_name):
     row = box.row()
