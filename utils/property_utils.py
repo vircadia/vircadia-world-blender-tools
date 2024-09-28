@@ -138,10 +138,7 @@ def update_custom_properties_from_transform(obj):
         print(f"Vircadia: Updated position for {obj.name}: {vircadia_pos}")
 
     # Update dimensions custom properties
-    if obj.get("type") == "Web":
-        vircadia_dims = (obj.dimensions.x, obj.dimensions.y, obj.dimensions.z)
-    else:
-        vircadia_dims = coordinate_utils.blender_to_vircadia_dimensions(*obj.dimensions)
+    vircadia_dims = coordinate_utils.blender_to_vircadia_dimensions(*obj.dimensions)
     if (obj.get("dimensions_x") != vircadia_dims[0] or 
         obj.get("dimensions_y") != vircadia_dims[1] or 
         obj.get("dimensions_z") != vircadia_dims[2]):
@@ -166,6 +163,11 @@ def update_custom_properties_from_transform(obj):
         print(f"Vircadia: Updated rotation for {obj.name}: {vircadia_rot}")
     
     print(f"Vircadia: Custom property update completed for {obj.name}")
+    
+    # Force UI update
+    for area in bpy.context.screen.areas:
+        if area.type == 'PROPERTIES':
+            area.tag_redraw()
     
     # Force UI update
     for area in bpy.context.screen.areas:

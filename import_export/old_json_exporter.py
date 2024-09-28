@@ -76,36 +76,24 @@ def get_vircadia_entity_data(obj, content_path):
 
     # Handle position, rotation, and dimensions
     if entity_type.lower() == "web":
-        # Handle Web entity with conversion
-        position = coordinate_utils.blender_to_vircadia_coordinates(
-            custom_props.get("position_x", 0.0),
-            custom_props.get("position_y", 0.0),
-            custom_props.get("position_z", 0.0)
-        )
         entity_data["position"] = {
-            "x": position[0],
-            "y": position[1],
-            "z": position[2]
+            "x": custom_props.get("position_x", 0.0),
+            "y": custom_props.get("position_y", 0.0),
+            "z": custom_props.get("position_z", 0.0)
         }
 
-        rotation = coordinate_utils.blender_to_vircadia_rotation(
-            custom_props.get("rotation_x", 0.0),
-            custom_props.get("rotation_y", 0.0),
-            custom_props.get("rotation_z", 0.0),
-            custom_props.get("rotation_w", 1.0)
-        )
         entity_data["rotation"] = {
-            "x": rotation[0],
-            "y": rotation[1],
-            "z": rotation[2],
-            "w": rotation[3]
+            "x": custom_props.get("rotation_x", 0.0),
+            "y": custom_props.get("rotation_y", 0.0),
+            "z": custom_props.get("rotation_z", 0.0),
+            "w": custom_props.get("rotation_w", 1.0)
         }
 
-        # For Web entities, we only care about X and Y dimensions
+        # Swap y and z dimensions for web entities
         entity_data["dimensions"] = {
             "x": custom_props.get("dimensions_x", 1.0),
-            "y": custom_props.get("dimensions_y", 1.0),
-            "z": 0.01  # Fixed thickness for web panels
+            "y": custom_props.get("dimensions_z", 1.0),
+            "z": custom_props.get("dimensions_y", 1.0)
         }
     elif entity_type.lower() == "zone":
         # Handle Zone entity without conversion

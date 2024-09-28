@@ -1,14 +1,14 @@
 import math
-from mathutils import Vector, Quaternion
+from mathutils import Vector, Quaternion, Matrix
 
 def vircadia_to_blender_coordinates(x, y, z):
-    # Convert from Y-up to Z-up
-    return x, z, -y
-
-def blender_to_vircadia_coordinates(x, y, z):
-    # Convert from Z-up to Y-up
+    # Convert from Vircadia Y-up to Blender Z-up
     return x, -z, y
 
+def blender_to_vircadia_coordinates(x, y, z):
+    # Convert from Blender Z-up to Vircadia Y-up
+    return x, z, -y
+    
 def vircadia_to_blender_dimensions(x, y, z):
     # Convert dimensions from Y-up to Z-up
     return x, z, y
@@ -18,12 +18,31 @@ def blender_to_vircadia_dimensions(x, y, z):
     return x, z, y
 
 def vircadia_to_blender_rotation(x, y, z, w):
-    # Convert quaternion from Y-up to Z-up
-    return Quaternion((w, x, -z, y))
+    # Create the Vircadia quaternion
+    vircadia_quat = Quaternion((w, x, y, z))
 
-def blender_to_vircadia_rotation(x, y, z, w):
-    # Convert quaternion from Z-up to Y-up
-    return Quaternion((x, -z, y, w))
+    # Define a 90-degree rotation around the X-axis to convert from Y-up to Z-up
+    rotation_quat = Quaternion((math.cos(math.pi / 4), math.sin(math.pi / 4), 0, 0))  # 90-degree rotation around X
+
+    # Apply the 90-degree rotation to the Vircadia quaternion
+    blender_quat = rotation_quat @ vircadia_quat
+
+    # Return the result as a Blender quaternion (x, y, z, w)
+    return (blender_quat.x, blender_quat.y, blender_quat.z, blender_quat.w)
+
+def blender_to_vircadia_rotation(w, x, y, z):
+    # Create the Blender quaternion
+    blender_quat = Quaternion((w, x, y, z))
+
+    # Define a -90-degree rotation around the X-axis to convert from Z-up to Y-up
+    rotation_quat = Quaternion((math.cos(-math.pi / 4), math.sin(-math.pi / 4), 0, 0))  # -90-degree rotation around X
+
+    # Apply the -90-degree rotation to the Blender quaternion
+    vircadia_quat = rotation_quat @ blender_quat
+
+    # Return the result as a Vircadia quaternion (x, y, z, w)
+    return (vircadia_quat.x, vircadia_quat.y, vircadia_quat.z, vircadia_quat.w)
+
 
 def euler_to_quaternion(roll, pitch, yaw):
     # Convert Euler angles to quaternion
@@ -49,13 +68,3 @@ def quaternion_to_euler(x, y, z, w):
     yaw = math.atan2(t3, t4)
 
     return roll, pitch, yaw
-
-def vircadia_to_blender_scale(x, y, z):
-    # Vircadia uses dimensions, Blender uses scale
-    # Assuming a default cube size of 1x1x1 in Blender
-    return x, z, y
-
-def blender_to_vircadia_scale(x, y, z):
-    # Blender uses scale, Vircadia uses dimensions
-    # Assuming a default cube size of 1x1x1 in Blender
-    return x, z, y

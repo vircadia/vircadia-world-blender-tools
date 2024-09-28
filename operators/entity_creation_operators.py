@@ -247,17 +247,27 @@ class VIRCADIA_OT_create_entity(Operator):
         if "position" in entity:
             x, y, z = entity["position"].values()
             obj.location = coordinate_utils.vircadia_to_blender_coordinates(x, y, z)
+            obj["position_x"] = x
+            obj["position_y"] = y
+            obj["position_z"] = z
 
         # Set dimensions
         if "dimensions" in entity:
             x, y, z = entity["dimensions"].values()
-            obj.scale = coordinate_utils.vircadia_to_blender_coordinates(x, y, z)
+            obj.dimensions = coordinate_utils.vircadia_to_blender_dimensions(x, y, z)
+            obj["dimensions_x"] = x
+            obj["dimensions_y"] = y
+            obj["dimensions_z"] = z
 
         # Set rotation
         if "rotation" in entity:
             x, y, z, w = entity["rotation"].values()
             obj.rotation_mode = 'QUATERNION'
             obj.rotation_quaternion = coordinate_utils.vircadia_to_blender_rotation(x, y, z, w)
+            obj["rotation_x"] = x
+            obj["rotation_y"] = y
+            obj["rotation_z"] = z
+            obj["rotation_w"] = w
 
     def add_to_type_collection(self, obj, entity_type):
         # Get or create the collection for this entity type
