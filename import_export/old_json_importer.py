@@ -2,7 +2,7 @@ import bpy
 import json
 import os
 import logging
-from ..utils import coordinate_utils, property_utils, world_setup, object_creation, collection_utils, error_handling
+from ..utils import coordinate_utils, object_utils, property_utils, world_setup, collection_utils, error_handling
 
 def load_json(file_path):
     try:
@@ -34,7 +34,7 @@ def import_entities(data, json_directory):
             entity["shape"] = "Shape"
 
         try:
-            obj = object_creation.create_blender_object(entity)
+            obj = object_utils.create_blender_object(entity)
             if obj is not None:
                 logging.info(f"Created Blender object: {obj.name}")
                 
