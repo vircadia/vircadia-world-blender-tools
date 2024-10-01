@@ -1,0 +1,58 @@
+{
+  "DataVersion": 0,
+  "Entities": [
+    {
+    "id": "{10000000-0000-0000-0000-000000000000}",
+    "type": "Light",
+    "lastEdited": 1000000000000000,
+    "visible": true,
+    "name": "",
+    "userData": "",
+    "href": "",
+    "description": "",
+    "dimensions": {
+        "x": 4,
+        "y": 4,
+        "z": 4
+    },
+    "rotation": {
+        "x": -0.0000000000000000,
+        "y": -0.0000000000000000,
+        "z": -0.0000000000000000,
+        "w": 1
+    },
+    "created": 1000000000000000,
+    "lastEditedBy": "{10000000-0000-0000-0000-000000000000}",
+    "queryAACube": {
+        "x": 1.000000000000000,
+        "y": 1.000000000000000,
+        "z": 1.000000000000000,
+        "scale": 1.000000000000000
+    },
+    "grab": {
+        "triggerable": false
+    },
+    "damping": 0,
+    "angularDamping": 0,
+    "dynamic": false,
+    "collisionsWillMove": false,
+    "cloneable": false,
+    "cloneDynamic": false,
+    "cloneAvatarEntity": false,
+	"vircadia_script": "",
+    "script": "",
+    "serverScripts": "",
+    "intensity": 5,
+    "exponent": 1,
+    "cutoff": 75,
+    "falloffRadius": 1,
+    "clientOnly": false,
+    "avatarEntity": false,
+    "localEntity": false,
+    "faceCamera": false,
+    "isFacingAvatar": false
+}
+    ],
+  "Id": "{10000000-0000-0000-0000-000000000000}",
+  "Version": 133
+}

@@ -1,0 +1,67 @@
+{
+  "DataVersion": 0,
+  "Entities": [
+    {
+    "id": "{10000000-0000-0000-0000-000000000000}",
+    "type": "Image",
+    "lastEdited": 1000000000000000,
+    "visible": true,
+	"parentID": "{00000000-0000-0000-0000-000000000000}",
+    "name": "",
+    "userData": "",
+    "href": "",
+    "description": "",
+    "position": {
+        "x": 0.0000000000000000,
+        "y": 0.0000000000000000,
+        "z": 0.0000000000000000
+    },
+    "dimensions": {
+        "x": 1.600000000000000,
+        "y": 0.9000000000000000,
+        "z": 0.010000000000000000
+    },
+    "rotation": {
+        "x": -0.0000000000000000,
+        "y": -0.0000000000000000,
+        "z": -0.0000000000000000,
+        "w": 1
+    },
+    "created": 1000000000000000,
+    "lastEditedBy": "{00000000-0000-0000-0000-000000000000}",
+    "queryAACube": {
+        "x": 1.000000000000000,
+        "y": 1.000000000000000,
+        "z": 1.000000000000000,
+        "scale": 1.000000000000000
+    },
+    "ignorePickIntersection": false,
+    "grab": {
+        "triggerable": false
+    },
+    "damping": 0,
+    "angularDamping": 0,
+    "dynamic": false,
+    "collisionsWillMove": false,
+    "collisionSoundURL": "",
+    "cloneable": false,
+    "cloneDynamic": false,
+    "cloneAvatarEntity": false,
+	"vircadia_script": "",
+    "script": "",
+    "serverScripts": "",
+    "imageURL": "",
+    "emissive": false,
+    "textures": {
+        "tex.picture": ""
+    },
+    "clientOnly": false,
+    "avatarEntity": false,
+    "localEntity": false,
+    "faceCamera": false,
+    "isFacingAvatar": false
+}
+    ],
+  "Id": "{10000000-0000-0000-0000-000000000000}",
+  "Version": 133
+}

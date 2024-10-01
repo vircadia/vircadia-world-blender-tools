@@ -1,0 +1,111 @@
+{
+  "DataVersion": 0,
+  "Entities": [
+    {
+    "id": "{10000000-0000-0000-0000-000000000000}",
+    "type": "ParticleEffect",
+    "lastEdited": 1000000000000000,
+    "visible": true,
+    "name": "",
+    "userData": "",
+    "href": "",
+    "description": "",
+    "dimensions": {
+        "x": 10.00000000000000,
+        "y": 10.00000000000000,
+        "z": 10.00000000000000
+    },
+    "rotation": {
+        "x": -0.0000000000000000,
+        "y": -0.0000000000000000,
+        "z": -0.0000000000000000,
+        "w": 1
+    },
+    "created": 1000000000000000,
+    "lastEditedBy": "{10000000-0000-0000-0000-000000000000}",
+    "queryAACube": {
+        "x": 1.000000000000000,
+        "y": 1.000000000000000,
+        "z": 1.000000000000000,
+        "scale": 1.000000000000000
+    },
+    "ignorePickIntersection": false,
+    "grab": {
+        "triggerable": false
+    },
+    "damping": 0,
+    "angularDamping": 0,
+    "cloneable": false,
+    "cloneDynamic": false,
+    "cloneAvatarEntity": false,
+	"vircadia_script": "",
+    "script": "",
+    "serverScripts": "",
+    "shapeType": "cylinder-y",
+    "compoundShapeURL": "",
+    "color": {
+        "red": 255,
+        "green": 0,
+        "blue": 0
+    },
+    "alpha": 0,
+    "textures": "",
+    "maxParticles": 10,
+    "lifespan": 1.5,
+    "emitRate": 5.5,
+    "emitSpeed": 0,
+    "speedSpread": 0,
+    "emitOrientation": {
+        "x": 0.008621415123343468,
+        "y": 0.008774004876613617,
+        "z": 0.008621415123343468,
+        "w": 0.999887228012085
+    },
+    "emitDimensions": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+    },
+    "polarFinish": 3.1415927410125732,
+    "emitAcceleration": {
+        "x": 0,
+        "y": 2.5,
+        "z": 0
+    },
+    "particleRadius": 0.25,
+    "radiusSpread": 1,
+    "radiusStart": 0.23000000417232513,
+    "radiusFinish": null,
+    "colorSpread": {
+        "red": 123,
+        "green": 123,
+        "blue": 123
+    },
+    "colorStart": {
+        "red": 255,
+        "green": 0,
+        "blue": 255
+    },
+    "colorFinish": {
+        "red": 0,
+        "green": 255,
+        "blue": 0
+    },
+    "alphaSpread": 1,
+    "alphaStart": 1,
+    "alphaFinish": null,
+    "emitterShouldTrail": true,
+    "spinSpread": 0.029999999329447746,
+    "spinStart": null,
+    "spinFinish": null,
+    "rotateWithEntity": true,
+    "clientOnly": false,
+    "avatarEntity": false,
+    "localEntity": false,
+    "faceCamera": false,
+    "isFacingAvatar": false
+}
+    ],
+  "Id": "{10000000-0000-0000-0000-000000000000}",
+  "Version": 133
+}

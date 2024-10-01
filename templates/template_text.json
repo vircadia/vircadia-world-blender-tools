@@ -1,0 +1,69 @@
+{
+  "DataVersion": 0,
+  "Entities": [
+    {
+    "id": "{10000000-0000-0000-0000-000000000000}",
+    "type": "Text",
+    "lastEdited": 1000000000000000,
+    "visible": true,
+    "name": "",
+    "userData": "",
+    "href": "",
+    "dimensions": {
+        "x": 0.6500000000000001,
+        "y": 0.30000000000000000,
+        "z": 0.010000000000000000
+    },
+    "rotation": {
+        "x": -0.0000000000000000,
+        "y": -0.0000000000000000,
+        "z": -0.0000000000000000,
+        "w": 1
+    },
+    "created": 1000000000000000,
+    "lastEditedBy": "{10000000-0000-0000-0000-000000000000}",
+    "queryAACube": {
+        "x": 1.000000000000000,
+        "y": 1.000000000000000,
+        "z": 1.000000000000000,
+        "scale": 1.000000000000000
+    },
+    "ignorePickIntersection": false,
+    "grab": {
+        "triggerable": false
+    },
+    "damping": 0,
+    "angularDamping": 0,
+    "dynamic": false,
+    "collisionsWillMove": false,
+    "collisionSoundURL": "",
+    "cloneable": false,
+    "cloneDynamic": false,
+    "cloneAvatarEntity": false,
+	"vircadia_script": "",
+    "script": "",
+    "serverScripts": "",
+    "text": "Text",
+    "lineHeight": 0.06000000000000000,
+    "backgroundColor": {
+        "red": 0,
+        "green": 0,
+        "blue": 0
+    },
+    "unlit": true,
+    "textEffect": "outline fill",
+    "textEffectColor": {
+        "red": 255,
+        "green": 255,
+        "blue": 255
+    },
+    "clientOnly": false,
+    "avatarEntity": false,
+    "localEntity": false,
+    "faceCamera": false,
+    "isFacingAvatar": false
+}
+    ],
+  "Id": "{10000000-0000-0000-0000-000000000000}",
+  "Version": 133
+}

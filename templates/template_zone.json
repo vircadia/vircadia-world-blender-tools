@@ -1,0 +1,123 @@
+{
+  "DataVersion": 0,
+  "Entities": [
+    {
+    "id": "{10000000-0000-0000-0000-000000000000}",
+    "type": "Zone",
+    "lastEdited": 1000000000000000,
+    "visible": true,
+    "parentID": "{00000000-0000-0000-0000-000000000000}",
+    "name": "",
+    "userData": "{\"environment\":{\"environmentTexture\":\"\"},\"renderingPipeline\":{\"fxaaEnabled\":true,\"glowLayer\":{\"blurKernelSize\":16,\"intensity\":1.5},\"glowLayerEnabled\":true}}",
+    "href": "",
+    "description": "",
+    "position": {
+        "x": 0.0000000000000000,
+        "y": 0.0000000000000000,
+        "z": 0.0000000000000000
+    },
+    "dimensions": {
+        "x": 1024,
+        "y": 256,
+        "z": 1024
+    },
+    "rotation": {
+        "x": -0.0000000000000000,
+        "y": -0.0000000000000000,
+        "z": -0.0000000000000000,
+        "w": 1
+    },
+    "created": 1000000000000000,
+    "lastEditedBy": "{00000000-0000-0000-0000-000000000000}",
+    "queryAACube": {
+        "x": 1.000000000000000,
+        "y": 1.000000000000000,
+        "z": 1.000000000000000,
+        "scale": 1.000000000000000
+    },
+    "ignorePickIntersection": false,
+    "grab": {
+		"grabbable": false,
+        "triggerable": false
+    },
+    "gravity": {
+        "x": 0,
+        "y": -1,
+        "z": 0
+    },
+    "cloneable": false,
+    "cloneDynamic": false,
+    "cloneAvatarEntity": false,
+	"vircadia_script": "",
+    "script": "",
+    "serverScripts": "",
+    "shapeType": "box",
+    "compoundShapeURL": "",
+    "keyLight": {
+        "color": {
+            "red": 255,
+            "green": 255,
+            "blue": 255
+        },
+        "direction": {
+            "x": 0.50000000000000000,
+            "y": -0.7100000000000000,
+            "z": 0.5000000000000000
+        },
+        "castShadows": true,
+        "shadowBias": 0.05000000000000000,
+        "shadowMaxDistance": 50
+    },
+    "ambientLight": {
+        "ambientIntensity": 1,
+        "ambientURL": ""
+    },
+    "skybox": {
+        "color": {
+            "red": 255,
+            "green": 255,
+            "blue": 255
+        },
+        "url": ""
+    },
+    "haze": {
+        "hazeRange": 3500,
+        "hazeColor": {
+            "red": 255,
+            "green": 255,
+            "blue": 255
+        },
+        "hazeGlareColor": {
+            "red": 255,
+            "green": 255,
+            "blue": 255
+        },
+        "hazeEnableGlare": false,
+        "hazeGlareAngle": 60,
+        "hazeAltitudeEffect": true,
+        "hazeCeiling": 1,
+        "hazeBaseRef": 25,
+        "hazeBackgroundBlend": 0.0000000000000000
+    },
+    "bloom": {
+        "bloomIntensity": 0.20000000000000000,
+        "bloomThreshold": 0.5,
+        "bloomSize": 1
+    },
+    "keyLightMode": "enabled",
+    "ambientLightMode": "enabled",
+    "skyboxMode": "enabled",
+    "hazeMode": "enabled",
+    "bloomMode": "enabled",
+    "avatarPriority": "hero",
+    "screenshare": "enabled",
+    "clientOnly": false,
+    "avatarEntity": false,
+    "localEntity": false,
+    "faceCamera": false,
+    "isFacingAvatar": false
+}
+    ],
+  "Id": "{10000000-0000-0000-0000-000000000000}",
+  "Version": 133
+}

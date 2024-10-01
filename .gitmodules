@@ -1,0 +1,6 @@
+[submodule "vircadia-world-meta"]
+	path = vircadia-world-meta
+	url = https://github.com/vircadia/vircadia-world-meta
+[submodule "vircadia-world-sdk-blender"]
+	path = vircadia-world-sdk-blender
+	url = https://github.com/vircadia/vircadia-world-sdk-blender.git
