@@ -17,6 +17,18 @@ Blender Version 4.2 (LTS) or later.
 
 ## Development
 
+Pull this repository recursively to get the submodules.
+
+```bash
+git clone --recurse-submodules https://github.com/vircadia/vircadia-world-tools.git
+```
+
+If you've already cloned it without the submodules, you can initialize and update them with:
+
+```bash
+git submodule update --init --recursive
+```
+
 1. Make a 'development-env' venv with python 3.10 or later.
 2. Install the dependencies with pip.
 3. Run Blender from the command line with the development add-on enabled.
