@@ -111,12 +111,12 @@ def update_object_visibility(obj, scene):
 
     # Update visibility based on settings
     if is_collision:
-        obj.hide_viewport = scene.vircadia_hide_collisions
+        obj.hide_set(scene.vircadia_hide_collisions)
         obj.display_type = 'WIRE' if scene.vircadia_collisions_wireframe else 'TEXTURED'
     elif is_lod:
-        obj.hide_viewport = scene.vircadia_hide_lod_levels
+        obj.hide_set(scene.vircadia_hide_lod_levels)
     elif obj.type == 'ARMATURE':
-        obj.hide_viewport = scene.vircadia_hide_armatures
+        obj.hide_set(scene.vircadia_hide_armatures)
 
     # Apply settings to children recursively
     for child in obj.children:
