@@ -3,11 +3,13 @@ import os
 import logging
 from ..import_export import old_json_exporter, gltf_exporter
 from .. import config
+from ..ui.tooltips import ImportExportTooltips
 
 class EXPORT_OT_vircadia_json(bpy.types.Operator):
     bl_idname = "export_scene.vircadia_json"
     bl_label = "Export Vircadia JSON"
     filepath: bpy.props.StringProperty(subtype="FILE_PATH")
+    bl_description = ImportExportTooltips.EXPORT_JSON 
 
     def execute(self, context):
         logging.info("Executing JSON export")
@@ -35,6 +37,7 @@ class EXPORT_OT_vircadia_glb(bpy.types.Operator):
     bl_idname = "export_scene.vircadia_glb"
     bl_label = "Export Vircadia GLB"
     filepath: bpy.props.StringProperty(subtype="FILE_PATH")
+    bl_description = ImportExportTooltips.EXPORT_GLB
 
     def execute(self, context):
         logging.info("Executing GLB export")

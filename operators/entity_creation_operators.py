@@ -3,7 +3,7 @@ import json
 import os
 from bpy.types import Operator
 
-from ..utils import entities, object_utils, property_utils, coordinate_utils, collection_utils, world_setup
+from ..utils import entities, object_creation, property_utils, coordinate_utils, collection_utils, world_setup
 
 def get_entity_types(self, context):
     return [(t, t.capitalize(), "", i) for i, t in enumerate(entities.ENTITY_TYPES)]
@@ -81,7 +81,7 @@ class VIRCADIA_OT_create_entity(Operator):
         elif entity["type"].lower() == "zone":
             return self.create_zone_object(entity, context)
         else:
-            obj = object_utils.create_blender_object(entity)
+            obj = object_creation.create_blender_object(entity)
             if obj:
                 # Add update callback to location, rotation, and scale properties
                 obj.location.update_callback = property_utils.custom_property_update
