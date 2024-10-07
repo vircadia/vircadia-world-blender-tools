@@ -29,12 +29,12 @@ If you've already cloned it without the submodules, you can initialize and updat
 git submodule update --init --recursive
 ```
 
-1. Make a 'development-env' venv with python 3.10 or later.
+1. Make a '.venv' venv with python 3.10 or later.
 2. Install the dependencies with pip.
 3. Run Blender from the command line with the development add-on enabled.
 
 ```bash
-python3 -m venv development-env
-source development-env/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
