@@ -3,5 +3,7 @@ test/import/*
 
 .venv/
 
-# Python
+wheels/
+dist/*
+
 __pycache__

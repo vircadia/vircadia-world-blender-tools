@@ -1,3 +1,30 @@
+[project]
+name = "vircadia-world-blender-tools"
+version = "0.1.0"
+description = "Blender add-on for creating Vircadia worlds"
+authors = [
+    {name = "Vircadia Contributors", email = "contact@vircadia.com"},
+]
+readme = "README.md"
+requires-python = ">=3.12"
+
+dependencies = [
+    "fake-bpy-module-latest",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [tool.pyright]
 venvPath = "."
-venv = ".development-env"
+venv = ".venv"
+
+[tool.setuptools]
+packages = ["vircadia_world_blender_tools"]
+
+[tool.setuptools.package-data]
+"vircadia_world_blender_tools" = ["**/*.py"]
+
+[tool.setuptools.exclude-package-data]
+"*" = ["*.pyc", "*.pyo", "*.pyd", "__pycache__"]
