@@ -5,11 +5,20 @@ This is a Blender add-on that allows the creation of full Vircadia worlds within
 ## Installation
 
 1. Download the latest release from the [releases page](https://github.com/vircadia/vircadia-world-tools/releases).
-2. Open Blender and go to `Edit > Preferences > Add-ons`.
-3. Click `Install` and select the downloaded folder.
-4. Enable the add-on.
-5. Make sure your right sidebar is open, if not the hotkey typically is `N` to open it.
-6. Navigate to the `Vircadia` tab.
+1. Open your Blender scripting console and run the following command:
+```python
+import sys
+print(sys.executable)
+```
+1. This will print the path to your Python executable. Now, with that path, run the following command:
+```python
+/path/to/blender/python -m pip install supabase
+```
+1. In Blender, go to `Edit > Preferences > Add-ons`.
+1. Click `Install` and select the downloaded folder.
+1. Enable the add-on.
+1. Make sure your right sidebar is open, if not the hotkey typically is `N` to open it.
+1. Navigate to the `Vircadia` tab.
 
 ## Development
 
