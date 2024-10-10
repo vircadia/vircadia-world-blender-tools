@@ -1,7 +1,7 @@
 import bpy
 import os
 import logging
-from ..import_export import old_json_exporter, gltf_exporter
+from ..import_export import old_json_exporter, old_gltf_exporter
 from .. import config
 from ..ui.tooltips import ImportExportTooltips
 
@@ -41,7 +41,7 @@ class EXPORT_OT_vircadia_glb(bpy.types.Operator):
 
     def execute(self, context):
         logging.info("Executing GLB export")
-        success = gltf_exporter.export_glb(context, self.filepath)
+        success = old_gltf_exporter.export_glb(context, self.filepath)
         if success:
             self.report({'INFO'}, f"GLB exported successfully to {self.filepath}")
             return {'FINISHED'}
