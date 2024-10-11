@@ -1,15 +1,10 @@
 import bpy
 from bpy.types import Panel, Operator
-from bpy.props import BoolProperty, StringProperty, IntProperty, FloatProperty
+from bpy.props import BoolProperty, StringProperty
 
 import sys
 import os
-import tempfile
-import json
-from mathutils import Vector
-import threading
-import time
-from supabase import create_client, Client
+import asyncio
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from ..import_export.gltf_exporter_test import TestGLTFExporter
@@ -303,14 +298,14 @@ class VIRCADIA_OT_connect_to_world(Operator):
     def execute(self, context):
         scene = context.scene
         if world_connection_manager.is_connected:
-            world_connection_manager.disconnect()
+            asyncio.run(world_connection_manager.disconnect())
         else:
-            world_connection_manager.connect(
+            asyncio.run(world_connection_manager.connect(
                 scene.vircadia_host,
                 scene.vircadia_supabase_key,
                 scene.vircadia_username,
                 scene.vircadia_password
-            )
+            ))
         return {'FINISHED'}
 
 class VIRCADIA_PT_main_panel(Panel):
@@ -339,7 +334,7 @@ class VIRCADIA_PT_main_panel(Panel):
         # API Key input (required)
         row = box.row()
         row.prop(scene, "vircadia_supabase_key", text="Supabase Key")
-        
+
         # Username and Password inputs (optional)
         box.label(text="Optional Login:")
         row = box.row()
