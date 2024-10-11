@@ -13,6 +13,7 @@ from supabase import create_client, Client
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from ..import_export.gltf_exporter_test import TestGLTFExporter
+from ..world_connection.world_connection_manager import world_connection_manager
 
 def update_visibility(self, context):
     for obj in bpy.data.objects:
@@ -301,70 +302,16 @@ class VIRCADIA_OT_connect_to_world(Operator):
 
     def execute(self, context):
         scene = context.scene
-        if scene.vircadia_connected:
-            self.disconnect(context)
+        if world_connection_manager.is_connected:
+            world_connection_manager.disconnect()
         else:
-            self.connect(context)
+            world_connection_manager.connect(
+                scene.vircadia_host,
+                scene.vircadia_supabase_key,
+                scene.vircadia_username,
+                scene.vircadia_password
+            )
         return {'FINISHED'}
-
-    def connect(self, context):
-        scene = context.scene
-        scene.vircadia_connection_status = "Connecting..."
-        try:
-            print(f"Connecting to {scene.vircadia_host} with key: [{scene.vircadia_supabase_key}], username: [{scene.vircadia_username}], password: [{scene.vircadia_password}]")
-            # Validate input
-            if not scene.vircadia_host:
-                raise ValueError("Supabase URL is required")
-            
-            if not scene.vircadia_supabase_key:
-                raise ValueError("Supabase Key is required")
-
-            # Initialize Supabase client
-            scene.vircadia_connection_status = "Initializing Supabase client..."
-            supabase: Client = create_client(scene.vircadia_host, scene.vircadia_supabase_key)
-            
-            # Attempt to connect
-            scene.vircadia_connection_status = "Attempting to connect..."
-            
-            if scene.vircadia_username and scene.vircadia_password:
-                # Use username and password authentication
-                userAndPassAuthResponse = supabase.auth.sign_in_with_password({
-                    "email": scene.vircadia_username,
-                    "password": scene.vircadia_password
-                })
-            else:
-                # Use API key authentication only
-                keyAuthResponse = supabase.table('connections').insert({"host": scene.vircadia_host}).execute()
-            
-            if userAndPassAuthResponse.user or keyAuthResponse:
-                scene.vircadia_connected = True
-                scene.vircadia_connection_status = "Connected successfully"
-                self.start_ping_thread(context)
-            else:
-                scene.vircadia_connection_status = "Connection failed: No data received"
-        except ValueError as ve:
-            scene.vircadia_connection_status = f"Error: {str(ve)}"
-        except Exception as e:
-            scene.vircadia_connection_status = f"Error: {str(e)}"
-
-    def disconnect(self, context):
-        scene = context.scene
-        scene.vircadia_connected = False
-        scene.vircadia_connection_status = "Disconnected"
-        scene.vircadia_ping = 0.0
-
-    def start_ping_thread(self, context):
-        def ping_loop():
-            scene = context.scene
-            while scene.vircadia_connected:
-                try:
-                    # Simulate a ping (replace with actual ping logic)
-                    time.sleep(1)
-                    scene.vircadia_ping = 50.0  # Example ping value
-                except:
-                    scene.vircadia_connection_status = "Ping failed"
-        
-        threading.Thread(target=ping_loop, daemon=True).start()
 
 class VIRCADIA_PT_main_panel(Panel):
     bl_label = "Vircadia"
@@ -384,9 +331,7 @@ class VIRCADIA_PT_main_panel(Panel):
         
         # Display connection status prominently
         status_box = box.box()
-        status_box.label(text=f"Status: {scene.vircadia_connection_status}")
-        if scene.vircadia_connected:
-            status_box.label(text=f"Ping: {scene.vircadia_ping:.2f} ms")
+        status_box.label(text=f"Status: {world_connection_manager.connection_status}")
         
         row = box.row()
         row.prop(scene, "vircadia_host", text="Supabase URL")
@@ -404,7 +349,7 @@ class VIRCADIA_PT_main_panel(Panel):
         
         row = box.row()
         row.operator("vircadia.connect_to_world", 
-                     text="Disconnect" if scene.vircadia_connected else "Connect")
+                     text="Disconnect" if world_connection_manager.is_connected else "Connect")
 
         # Import/Export Section
         box = layout.box()
@@ -522,22 +467,6 @@ def register():
         default="",
         subtype='PASSWORD'
     )
-    bpy.types.Scene.vircadia_connected = BoolProperty(
-        name="Connected",
-        description="Whether connected to the Vircadia World",
-        default=False
-    )
-    bpy.types.Scene.vircadia_connection_status = StringProperty(
-        name="Connection Status",
-        description="Current connection status",
-        default="Disconnected"
-    )
-    bpy.types.Scene.vircadia_ping = FloatProperty(
-        name="Ping",
-        description="Current ping to the Vircadia World",
-        default=0.0,
-        min=0.0
-    )
 
 def update_hide_collisions(self, context):
     if self.vircadia_hide_collisions:
@@ -567,9 +496,6 @@ def unregister():
     del bpy.types.Scene.vircadia_supabase_key
     del bpy.types.Scene.vircadia_username
     del bpy.types.Scene.vircadia_password
-    del bpy.types.Scene.vircadia_connected
-    del bpy.types.Scene.vircadia_connection_status
-    del bpy.types.Scene.vircadia_ping
 
 if __name__ == "__main__":
     register()
