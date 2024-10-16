@@ -5,7 +5,7 @@ import tempfile
 import os
 import random
 import time
-from .gltf_exporter import GLTFExporter
+from .world_export import GLTFExporter
 
 class TestGLTFExporter(unittest.TestCase):
     @staticmethod

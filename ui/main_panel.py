@@ -7,7 +7,7 @@ import os
 import asyncio
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from ..import_export.gltf_exporter_test import TestGLTFExporter
+from ..import_export.world_import_export_test import TestGLTFExporter
 from ..world_connection.world_connection_manager import world_connection_manager
 
 def update_visibility(self, context):
