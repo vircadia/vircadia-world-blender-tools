@@ -14,6 +14,11 @@ print(sys.executable)
 ```python
 /path/to/blender/python -m pip install supabase
 ```
+1. Confirm that it was installed correctly by running in your Blender scripting console:
+```python
+import supabase
+print(supabase.__version__)
+```
 1. In Blender, go to `Edit > Preferences > Add-ons`.
 1. Click `Install` and select the downloaded folder.
 1. Enable the add-on.
