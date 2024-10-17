@@ -2,7 +2,7 @@ import bpy
 from typing import Dict, Any, List, Optional
 import json
 
-from vircadia_world_sdk_py.shared.modules.vircadia_world_meta.python.world import (
+from ..vircadia_world_sdk_py.shared.modules.vircadia_world_meta.python.world import (
     TableWorldGLTF, TableScene, TableNode, TableMesh, TableMaterial, TableTexture,
     TableImage, TableSampler, TableAnimation, TableSkin, TableCamera, TableBuffer,
     TableBufferView, TableAccessor, TableMetadata
@@ -228,3 +228,9 @@ class WorldGLTFToBlenderImport:
 
     def get_object_by_uuid(self, uuid: str) -> Optional[bpy.types.ID]:
         return self.uuid_to_object.get(uuid)
+
+def register():
+    pass
+
+def unregister():
+    pass

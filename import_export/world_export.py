@@ -129,3 +129,10 @@ class BlenderToWorldGLTFExport:
             "images": images,
             "cameras": cameras
         }
+
+def register():
+    pass
+
+def unregister():
+    pass
+

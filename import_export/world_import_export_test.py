@@ -5,7 +5,7 @@ import tempfile
 import os
 import random
 import time
-from .world_export import GLTFExporter
+from .world_export import BlenderToWorldGLTFExport
 
 class TestGLTFExporter(unittest.TestCase):
     @staticmethod
