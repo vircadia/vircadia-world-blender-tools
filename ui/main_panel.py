@@ -2,6 +2,14 @@ import bpy
 from bpy.types import Panel, Operator
 from bpy.props import BoolProperty, StringProperty
 
+import sys
+import os
+import asyncio
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+from ..import_export.world_import_export_test import TestGLTFExporter
+from ..world_connection.world_connection_manager import world_connection_manager
+
 def update_visibility(self, context):
     for obj in bpy.data.objects:
         update_object_visibility(obj, context.scene)
@@ -271,8 +279,37 @@ class VIRCADIA_OT_process_lod(Operator):
         self.report({'INFO'}, f"Processed {processed_count} LOD objects. {existing_property_count} objects already had the property.")
         return {'FINISHED'}
 
+class VIRCADIA_OT_create_and_export_linked_cubes(Operator):
+    bl_idname = "vircadia.create_and_export_linked_cubes"
+    bl_label = "Create and Export Linked Cubes"
+    bl_description = "Create a set of linked cubes and export them as glTF"
+
+    def execute(self, context):
+        test_instance = TestGLTFExporter()
+        test_instance.test_create_and_export_complex_objects()
+        self.report({'INFO'}, "Test completed. Check the console for results.")
+        return {'FINISHED'}
+
+class VIRCADIA_OT_connect_to_world(Operator):
+    bl_idname = "vircadia.connect_to_world"
+    bl_label = "Connect to World"
+    bl_description = "Connect to or disconnect from the Vircadia World"
+
+    def execute(self, context):
+        scene = context.scene
+        if world_connection_manager.is_connected:
+            asyncio.run(world_connection_manager.disconnect())
+        else:
+            asyncio.run(world_connection_manager.connect(
+                scene.vircadia_host,
+                scene.vircadia_supabase_key,
+                scene.vircadia_username,
+                scene.vircadia_password
+            ))
+        return {'FINISHED'}
+
 class VIRCADIA_PT_main_panel(Panel):
-    bl_label = "World Properties"
+    bl_label = "Vircadia"
     bl_idname = "VIEW3D_PT_vircadia_main"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
@@ -282,6 +319,32 @@ class VIRCADIA_PT_main_panel(Panel):
     def draw(self, context):
         layout = self.layout
         scene = context.scene
+
+        # Connect to World Section
+        box = layout.box()
+        box.label(text="World Connection")
+        
+        # Display connection status prominently
+        status_box = box.box()
+        status_box.label(text=f"Status: {world_connection_manager.connection_status}")
+        
+        row = box.row()
+        row.prop(scene, "vircadia_host", text="Supabase URL")
+        
+        # API Key input (required)
+        row = box.row()
+        row.prop(scene, "vircadia_supabase_key", text="Supabase Key")
+
+        # Username and Password inputs (optional)
+        box.label(text="Optional Login:")
+        row = box.row()
+        row.prop(scene, "vircadia_username", text="Username")
+        row = box.row()
+        row.prop(scene, "vircadia_password", text="Password")
+        
+        row = box.row()
+        row.operator("vircadia.connect_to_world", 
+                     text="Disconnect" if world_connection_manager.is_connected else "Connect")
 
         # Import/Export Section
         box = layout.box()
@@ -325,10 +388,18 @@ class VIRCADIA_PT_main_panel(Panel):
         box.prop(scene, "vircadia_hide_armatures", text="Hide Armatures")
         box.prop(scene, "vircadia_hide_lightmaps", text="Hide Lightmaps")
 
+        # Test Section
+        box = layout.box()
+        box.label(text="Test")
+        box.operator("vircadia.create_and_export_linked_cubes", text="Run GLTF Export Test")
+
 def register():
     bpy.utils.register_class(VIRCADIA_OT_convert_collisions)
     bpy.utils.register_class(VIRCADIA_OT_process_lod)
     bpy.utils.register_class(VIRCADIA_OT_show_warning)
+    bpy.utils.register_class(VIRCADIA_OT_create_and_export_linked_cubes)
+    bpy.utils.register_class(VIRCADIA_OT_connect_to_world)
+    bpy.utils.register_class(VIRCADIA_PT_main_panel)
     bpy.types.Scene.vircadia_content_path = StringProperty(
         name="Content Path",
         description="Path to the content directory for Vircadia assets",
@@ -369,8 +440,29 @@ def register():
         description="Stores the previous state of use_scene_world",
         default=True
     )
-    bpy.utils.register_class(VIRCADIA_PT_main_panel)
-    
+    bpy.types.Scene.vircadia_host = StringProperty(
+        name="Supabase URL",
+        description="Supabase project URL (including port if needed)",
+        default="https://your-project.supabase.co"
+    )
+    bpy.types.Scene.vircadia_supabase_key = StringProperty(
+        name="Supabase Key",
+        description="Supabase project API key (required)",
+        default="",
+        subtype='PASSWORD'
+    )
+    bpy.types.Scene.vircadia_username = StringProperty(
+        name="Username",
+        description="Username for Vircadia World login (optional)",
+        default=""
+    )
+    bpy.types.Scene.vircadia_password = StringProperty(
+        name="Password",
+        description="Password for Vircadia World login (optional)",
+        default="",
+        subtype='PASSWORD'
+    )
+
 def update_hide_collisions(self, context):
     if self.vircadia_hide_collisions:
         self.vircadia_collisions_wireframe = False
@@ -386,13 +478,19 @@ def unregister():
     bpy.utils.unregister_class(VIRCADIA_OT_show_warning)
     bpy.utils.unregister_class(VIRCADIA_OT_process_lod)
     bpy.utils.unregister_class(VIRCADIA_OT_convert_collisions)
+    bpy.utils.unregister_class(VIRCADIA_OT_create_and_export_linked_cubes)
+    bpy.utils.unregister_class(VIRCADIA_OT_connect_to_world)
     del bpy.types.Scene.vircadia_hide_collisions
-    del bpy.types.Scene.vircadia_collisions_wireframe
+    del bpy.types.Scene.vircadia_collisions_wireframej
     del bpy.types.Scene.vircadia_hide_lod_levels
     del bpy.types.Scene.vircadia_hide_armatures
     del bpy.types.Scene.vircadia_hide_lightmaps
     del bpy.types.Scene.vircadia_content_path
     del bpy.types.Scene.vircadia_previous_scene_world
+    del bpy.types.Scene.vircadia_host
+    del bpy.types.Scene.vircadia_supabase_key
+    del bpy.types.Scene.vircadia_username
+    del bpy.types.Scene.vircadia_password
 
 if __name__ == "__main__":
     register()

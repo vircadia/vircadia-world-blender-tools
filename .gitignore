@@ -1,7 +1,9 @@
 test/export/*
 test/import/*
 
-development-env/
+.venv/
 
-# Python
+wheels/
+dist/*
+
 __pycache__

@@ -1,5 +1,6 @@
 import bpy
 from bpy.types import Operator
+import os
 
 class VIRCADIA_OT_paste_condense_script(Operator):
     bl_idname = "vircadia.paste_condense_script"
@@ -17,10 +18,16 @@ class VIRCADIA_OT_paste_condense_script(Operator):
 class VIRCADIA_OT_paste_content_path(Operator):
     bl_idname = "vircadia.paste_content_path"
     bl_label = "Paste"
-    bl_description = "Paste content path from clipboard"
+    bl_description = "Paste content path from clipboard and remove the file name"
 
     def execute(self, context):
-        context.scene.vircadia_content_path = bpy.context.window_manager.clipboard
+        clipboard = bpy.context.window_manager.clipboard
+        # Remove the file name from the path
+        directory = os.path.dirname(clipboard)
+        # Ensure the path ends with a slash
+        if directory and not directory.endswith(('/', '\\')):
+            directory += '/'
+        context.scene.vircadia_content_path = directory
         return {'FINISHED'}
 
 def register():

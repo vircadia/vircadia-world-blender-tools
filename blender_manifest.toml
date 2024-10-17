@@ -1,8 +1,8 @@
 schema_version = "1.0.0"
 
-id = "vircadia_world_tools"
+id = "vircadia_world_blender_tools"
 version = "0.1.0"
-name = "Vircadia World Tools"
+name = "Vircadia World Blender Tools"
 tagline = "Create and edit Vircadia worlds in Blender"
 maintainer = "Vircadia Contributors <hello@vircadia.com>"
 type = "add-on"
@@ -15,6 +15,14 @@ license = [
   "SPDX:Apache-2.0",
 ]
 
+wheels = [
+]
+
+platforms = [
+  "windows.x86_64",
+  "linux.x86_64",
+  "macos-arm64",
+]
+
 [permissions]
 files = "Import/export Vircadia environments to/from disk"
-    

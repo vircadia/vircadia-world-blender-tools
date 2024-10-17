@@ -15,27 +15,28 @@ class VIRCADIA_OT_convert_to_vircadia(Operator):
             # Load the template_model.json template
             addon_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
             json_path = os.path.join(addon_path, "templates", f"{entities.ENTITY_TEMPLATES_JSON['model']}")
-            
+
             with open(json_path, 'r') as f:
                 template = json.load(f)
-            
+
             # Get the first entity from the template
             entity = template["Entities"][0]
-            
+
             # Set initial properties
             property_utils.set_initial_properties(obj, entity)
-            
+
             # Set the "name" custom property to the Blender object's name
             obj["name"] = obj.name
 
             # Set the "type" custom property
             obj["type"] = "Model"
 
+            # Set the content path if available
+            if context.scene.vircadia_content_path:
+                obj["modelURL"] = context.scene.vircadia_content_path
+
             # Move the object to the appropriate collection
             self.move_to_type_collection(obj, "Model")
-            
-            # The update logic is already handled by the depsgraph update handler
-            # No need to add callbacks manually here
 
             self.report({'INFO'}, f"Converted {obj.name} to Vircadia entity")
             return {'FINISHED'}
@@ -46,14 +47,14 @@ class VIRCADIA_OT_convert_to_vircadia(Operator):
     def move_to_type_collection(self, obj, entity_type):
         # Get or create the collection for this entity type
         collection = collection_utils.get_or_create_collection(entity_type)
-        
+
         # Remove the object from all other collections
         for coll in obj.users_collection:
             coll.objects.unlink(obj)
-        
+
         # Link the object to the type-specific collection
         collection.objects.link(obj)
-        
+
         return collection
 
 class VIRCADIA_OT_selected_to_collision(Operator):

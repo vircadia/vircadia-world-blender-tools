@@ -168,7 +168,7 @@ def export_glb(context, filepath):
 
 # Add register and unregister functions to avoid the attribute error
 def register():
-    print("gltf_exporter registered")
+    print("old_gltf_exporter registered")
 
 def unregister():
-    print("gltf_exporter unregistered")
+    print("old_gltf_exporter unregistered")

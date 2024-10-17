@@ -5,19 +5,32 @@ This is a Blender add-on that allows the creation of full Vircadia worlds within
 ## Installation
 
 1. Download the latest release from the [releases page](https://github.com/vircadia/vircadia-world-tools/releases).
-2. Open Blender and go to `Edit > Preferences > Add-ons`.
-3. Click `Install` and select the downloaded folder.
-4. Enable the add-on.
-5. Make sure your right sidebar is open, if not the hotkey typically is `N` to open it.
-6. Navigate to the `Vircadia` tab.
-
-## Requirements
-
-Blender Version 4.2 (LTS) or later.
+1. Open your Blender scripting console and run the following command:
+```python
+import sys
+print(sys.executable)
+```
+1. This will print the path to your Python executable. Now, with that path, run the following command:
+```python
+/path/to/blender/python -m pip install supabase
+```
+1. In Blender, go to `Edit > Preferences > Add-ons`.
+1. Click `Install` and select the downloaded folder.
+1. Enable the add-on.
+1. Make sure your right sidebar is open, if not the hotkey typically is `N` to open it.
+1. Navigate to the `Vircadia` tab.
 
 ## Development
 
-Pull this repository recursively to get the submodules.
+### Requirements
+
+* Blender Version 4.2 (LTS) or later. (accessible via path as "`blender`")
+* Python 3.12
+* pip (usually comes with Python)
+
+### Steps
+
+1. Clone this repository recursively to get the submodules:
 
 ```bash
 git clone --recurse-submodules https://github.com/vircadia/vircadia-world-tools.git
@@ -29,12 +42,22 @@ If you've already cloned it without the submodules, you can initialize and updat
 git submodule update --init --recursive
 ```
 
-1. Make a 'development-env' venv with python 3.10 or later.
-2. Install the dependencies with pip.
-3. Run Blender from the command line with the development add-on enabled.
+2. Navigate to the project directory:
 
 ```bash
-python3 -m venv development-env
-source development-env/bin/activate
+cd vircadia-world-tools
+```
+
+3. Create and activate a virtual environment:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate  # On Windows, use `.venv\Scripts\activate`
+```
+
+4. Install the project dependencies:
+
+```bash
 pip install -r requirements.txt
 ```
+

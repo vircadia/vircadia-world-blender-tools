@@ -3,12 +3,14 @@ import os
 from bpy_extras.io_utils import ImportHelper
 from bpy.props import CollectionProperty, StringProperty
 from bpy.types import Operator
-from ..import_export import old_json_importer, gltf_importer
+from ..import_export import old_json_importer, world_import
+from ..ui.tooltips import ImportExportTooltips
 
 class IMPORT_OT_vircadia_json(bpy.types.Operator):
     bl_idname = "import_scene.vircadia_json"
     bl_label = "Import Vircadia JSON"
     filepath: bpy.props.StringProperty(subtype="FILE_PATH")
+    bl_description = ImportExportTooltips.IMPORT_JSON
 
     def execute(self, context):
         try:
@@ -25,6 +27,7 @@ class IMPORT_OT_vircadia_json(bpy.types.Operator):
 class IMPORT_OT_vircadia_gltf(Operator, ImportHelper):
     bl_idname = "import_scene.vircadia_gltf"
     bl_label = "Import Vircadia GLTF"
+    bl_description = ImportExportTooltips.IMPORT_GLTF
     
     files: CollectionProperty(
         name="File Path",
@@ -38,7 +41,7 @@ class IMPORT_OT_vircadia_gltf(Operator, ImportHelper):
 
     def execute(self, context):
         filepaths = [os.path.join(self.directory, name.name) for name in self.files]
-        gltf_importer.import_gltf_or_glb(context, filepaths)
+        world_import.import_gltf_or_glb(context, filepaths)
         return {'FINISHED'}
 
 def register():
