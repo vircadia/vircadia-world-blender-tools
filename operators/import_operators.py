@@ -3,7 +3,8 @@ import os
 from bpy_extras.io_utils import ImportHelper
 from bpy.props import CollectionProperty, StringProperty
 from bpy.types import Operator
-from ..import_export import old_json_importer, world_import
+
+from ..import_export import old_gltf_importer
 from ..ui.tooltips import ImportExportTooltips
 
 class IMPORT_OT_vircadia_json(bpy.types.Operator):
@@ -41,7 +42,7 @@ class IMPORT_OT_vircadia_gltf(Operator, ImportHelper):
 
     def execute(self, context):
         filepaths = [os.path.join(self.directory, name.name) for name in self.files]
-        world_import.import_gltf_or_glb(context, filepaths)
+        old_gltf_importer.import_gltf_or_glb(context, filepaths)
         return {'FINISHED'}
 
 def register():
