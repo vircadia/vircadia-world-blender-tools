@@ -4,7 +4,7 @@ from bpy_extras.io_utils import ImportHelper
 from bpy.props import CollectionProperty, StringProperty
 from bpy.types import Operator
 
-from ..import_export import old_gltf_importer
+from ..import_export import old_gltf_importer, old_json_importer
 from ..ui.tooltips import ImportExportTooltips
 
 class IMPORT_OT_vircadia_json(bpy.types.Operator):
