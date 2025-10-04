@@ -66,3 +66,6 @@ source .venv/bin/activate  # On Windows, use `.venv\Scripts\activate`
 pip install -r requirements.txt
 ```
 
+## Documentation
+
+Go to [docs](/docs) to view the documentation.
